@@ -29,7 +29,7 @@ static bool EvtCtrl::checkClickEvent(const ClickEvent* ev, const int& x,const in
   //Serial.println(String(id));
   bool result = false;
   //Serial.println("enabled "+String(x) + " " + String(y));
-  if (ev != nullptr) {
+  if (ev != nullptr && ev->enabled) {
     //Serial.println("has component "+String(component->x)+","+String(component->y)+","+String(component->r1)+","+boolToString(component->isCircular())+","+String(component->r1)+ "," + String(component->getHeight())+","+String(abs(component->x - x))+","+String(abs(component->y - y)));      
     
     if (ev->type == 2 || ev->type == 3) { //circle | triangle

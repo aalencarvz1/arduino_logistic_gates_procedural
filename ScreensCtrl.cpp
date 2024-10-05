@@ -4,6 +4,7 @@
 #include "Colors.h"
 #include "Gates.h"
 #include "Gate.h"
+#include "ScreenTutorialGates.h"
 
 
 //STATIC INITIALIZATIONS
@@ -113,6 +114,10 @@ static void ScreensCtrl::drawTutorialScreenOptions(TextInfo titleInfo) {
   drawGateButton(pX,pY,pR,col+3,lin,hSpace,TFT_PURPLE,GATES_NAMES[6]);
 }
 
+static void ScreensCtrl::drawTutorialGatesScreen(TextInfo titleInfo, char* params[]) {  
+  ScreenTutorialGates::draw(titleInfo, params);
+}
+
 static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
   Serial.println(F("INIT ScreensCtrl::goTo"));
   Serial.println("screenId "+String(screenId));
@@ -179,6 +184,9 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
       break;
     case 2: //tutorial
       drawTutorialScreenOptions(titleInfo);      
+      break;
+    case 20: //tutorial-gates
+      drawTutorialGatesScreen(titleInfo, params);      
       break;
     default: 
       DrawCtrl::drawCenteredText("Nada aqui",TSCtrl::tft.height()/2);      

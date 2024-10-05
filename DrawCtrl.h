@@ -71,6 +71,22 @@ struct DrawCtrl{
     const double& multiplier = 1
   );
 
+  static void DrawCtrl::drawComponent(
+    uint8_t type,
+    int16_t x,
+    int16_t y,
+    int16_t m1,
+    int16_t m2,
+    double& x2,
+    double& y2,
+    double& r1,
+    double r2=0,
+    uint16_t color = DEFAULT_CLICKABLE_COLOR,
+    bool filled = true,
+    char* text = nullptr,
+    uint16_t textColor = DEFAULT_CLICKABLE_TEXT_COLOR
+  );
+
   static ClickEvent* drawClickable(
     void (*staticOnClick)() = nullptr,
     ICallback* onClickCallback = nullptr,  // Ponteiro para o callback

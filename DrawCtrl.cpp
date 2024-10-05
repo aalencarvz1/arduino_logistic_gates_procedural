@@ -168,15 +168,15 @@ static void DrawCtrl::drawRoundedPlay(
   }
 }
 
-static ClickEvent* DrawCtrl::drawClickable(
-  void (*staticOnClick)(),
-  ICallback* onClickCallback,
+static void DrawCtrl::drawComponent(
   uint8_t type,
   int16_t x,
   int16_t y,
   int16_t m1,
   int16_t m2,
-  double r1,
+  double& x2,
+  double& y2,
+  double& r1,
   double r2,
   uint16_t color,
   bool filled,
@@ -184,8 +184,6 @@ static ClickEvent* DrawCtrl::drawClickable(
   uint16_t textColor
 ) {
 
-  double x2 = 0;
-  double y2 = 0;
   
   //draw
   if (type == 2) {//circle
@@ -259,6 +257,42 @@ static ClickEvent* DrawCtrl::drawClickable(
   if (text != nullptr) {
     drawCenteredText(text,y+m2/2,x+m1/2,DEFAULT_TEXT_SIZE,textColor);
   }
+}
+
+static ClickEvent* DrawCtrl::drawClickable(
+  void (*staticOnClick)(),
+  ICallback* onClickCallback,
+  uint8_t type,
+  int16_t x,
+  int16_t y,
+  int16_t m1,
+  int16_t m2,
+  double r1,
+  double r2,
+  uint16_t color,
+  bool filled,
+  char* text,
+  uint16_t textColor
+) {
+
+  double x2 = 0;
+  double y2 = 0;
+  
+  drawComponent(
+    type,
+    x,
+    y,
+    m1,
+    m2,
+    x2,
+    y2,
+    r1,
+    r2,
+    color,
+    filled,
+    text,
+    textColor
+  );
 
    //create event
   ClickEvent* result = nullptr;
