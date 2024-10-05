@@ -1,0 +1,42 @@
+struct Gate {
+	byte gateType = 0,
+	int16_t firstInputX = 0,
+	int16_t firstInputY = 0,
+	uint8_t inputSpaceBetwenn = 0,
+	int16_t outputX = 0,
+	int16_t outputY = 0,
+	uint8_t packedFlags = 0b00000000;
+	uint8_t packedInputs = 0b00000000;	
+	Gate** connectedGates = nullptr; 
+	uint8_t** connectedInputs = nullptr;
+	uint8_t connectedGatesQty = 0;
+}
+
+setGateInput(Gate,0,false){...setbit,redraw if flagged, calcOuput};
+calcOuput(Gate){...calcoutput according type and inputs flags, if altered output, setGateOutput}
+setGateOutput(Gate,newState){...setBit, redraw if flagged, set state of inputs connecteds to this};
+
+drawScreen(title, hasback){clearallevents, updateStack, clearscrren,drawrect,drawtitle,drawback}
+
+tft::drawline, rectangle,circle,etc
+
+drawClickagle(type[rect,circl,triang],x,y,m1,m2,r1,r2,color, filled, text,textColor,staticEvent,icallbackevent)
+
+drawOption() {drawClickable, drawBorder, drawPlay, printText}
+
+struct clickEvent{
+	byte type [rect,circle]
+	x,y,m1,m2
+	staticEvent,
+	ICallback
+}
+
+events** ScreenEvents; (global) for long life events on screen clear and create on screen start
+events** TransitoryEvents; (global) for small life events on screen (transitions) clear on user navigate between screen options
+addEvent(event,events**);
+addScreenEvent(event)
+addTransitoryEvent(event)
+clearTransitoryEvents()
+clearStreenEvents()
+clearAllEvents() //onChangeScreen
+checkClickEvents()
