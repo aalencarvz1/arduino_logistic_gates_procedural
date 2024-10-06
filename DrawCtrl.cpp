@@ -470,7 +470,7 @@ static void DrawCtrl::drawOr(Gate* g) {
   int16_t pcX = 0;
   for (uint8_t i = 0; i < g->inputCount * 1.0 / 2; i++) {
     pcX = g->firstInputX+i*g->inputSpaceBetwenn;
-    newConnectorSize = getCatetoFromPitagoras(baseArc.r,baseArc.x-(g->firstInputX)); 
+    newConnectorSize = getCatetoFromPitagoras(baseArc.r,baseArc.x-pcX); 
     newPos = baseArc.y-newConnectorSize;
     newConnectorSize = newConnectorSize - (baseArc.y - g->firstInputY);
     TSCtrl::tft.drawLine(
