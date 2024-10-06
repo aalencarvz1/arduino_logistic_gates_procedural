@@ -8,11 +8,19 @@
 static char* ScreenTutorialGates::currentGateName = GATES_NAMES[0];
 static ClickEvent* ScreenTutorialGates::prevEv = nullptr;
 static ClickEvent* ScreenTutorialGates::nextEv = nullptr;
+static Gate* ScreenTutorialGates::currentGate = nullptr;
 static bool ScreenTutorialGates::prevEnabled = false;
 static bool ScreenTutorialGates::nextEnabled = false;
+static TextInfo ScreenTutorialGates::titleInfo;
 
-static void ScreenTutorialGates::init() {
+static void ScreenTutorialGates::freeMemory() {
   currentGateName = GATES_NAMES[0];
+  if (currentGate != nullptr) {
+    delete currentGate;
+    currentGate = nullptr;
+  }
+
+  //events must have deleted by events controller
   prevEv = nullptr;
   nextEv = nullptr;
   prevEnabled = false;
@@ -93,9 +101,9 @@ static void ScreenTutorialGates::drawNavigationButtons(){
       onClick,
       nullptr,
       3,
-      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 50,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 60,
       DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + TSCtrl::tft.height() /2-25,
-      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 50,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 60,
       DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + TSCtrl::tft.height() /2+25,
       0,
       5,
@@ -111,9 +119,9 @@ static void ScreenTutorialGates::drawNavigationButtons(){
     double r1=0;
     DrawCtrl::drawComponent(
       3,
-      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 50,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 60,
       DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + TSCtrl::tft.height() /2-25,
-      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 50,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 60,
       DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + TSCtrl::tft.height() /2+25,
       x2,
       y2,
@@ -127,22 +135,56 @@ static void ScreenTutorialGates::drawNavigationButtons(){
   }
 }
 
+static void ScreenTutorialGates::drawGate(const char* gateName){
+  EvtCtrl::clearTransitoryEvents();
+  if (currentGate != nullptr) {
+    delete currentGate;
+    currentGate = nullptr;    
+  }
+  //clear gate name
+  TSCtrl::tft.fillRect(
+    DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+5,
+    titleInfo.y + titleInfo.h,
+    100,
+    20,
+    DEFAULT_BACKGROUND_COLOR
+  );
+
+  TSCtrl::tft.fillRect(
+    DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+5+80,
+    titleInfo.y + titleInfo.h,
+    300,
+    TSCtrl::tft.height() - (DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + titleInfo.h + 10),
+    DEFAULT_BACKGROUND_COLOR
+  );
+
+  TSCtrl::tft.setCursor(DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+5,titleInfo.y + titleInfo.h+5);
+  TSCtrl::tft.setTextSize(2);
+  TSCtrl::tft.setTextColor(DEFAULT_TEXT_COLOR);
+  TSCtrl::tft.print(gateName);
+
+  currentGate = new Gate(getGateIndex(gateName),150,250,150);
+  initGateMeasurements(currentGate);
+  DrawCtrl::drawGate(currentGate);
+}
+
 static void ScreenTutorialGates::drawPrevGate(){
   Serial.println("going back gate");
   currentGateName = getPrevGateName(currentGateName);
   drawNavigationButtons();
-  draw gate
+  drawGate(currentGateName);
 }
 
 static void ScreenTutorialGates::drawNextGate(){
   Serial.println("going next gate");
   currentGateName = getNextGateName(currentGateName);
   drawNavigationButtons();
-  draw gate
+  drawGate(currentGateName);
 }
 
-static void ScreenTutorialGates::draw(TextInfo titleInfo, char* params[]) {
-  init();
+static void ScreenTutorialGates::draw(TextInfo pTitleInfo, char* params[]) {
+  freeMemory();
+  titleInfo = pTitleInfo;
   if (params != nullptr && params[0] != nullptr) {
     currentGateName = params[0];
   } else {

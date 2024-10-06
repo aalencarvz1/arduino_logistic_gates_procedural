@@ -24,6 +24,21 @@ static void EvtCtrl::addScreenEvent(ClickEvent* pEvent) {
   FREERAM_PRINT;
 }
 
+static void EvtCtrl::addTransitoryEvent(ClickEvent* pEvent) {
+  ClickEvent** newTransitoryClickEvents = new ClickEvent*[transitoryClickEventsCount + 1];    
+
+  for (uint8_t i = 0; i < transitoryClickEventsCount; i++) {
+    newTransitoryClickEvents[i] = transitoryClickEvents[i];
+  }
+  newTransitoryClickEvents[transitoryClickEventsCount] = pEvent;
+  if (transitoryClickEvents != nullptr) {
+    delete[] transitoryClickEvents;
+  }
+  transitoryClickEvents = newTransitoryClickEvents;
+  transitoryClickEventsCount++;
+  FREERAM_PRINT;
+}
+
 static bool EvtCtrl::checkClickEvent(const ClickEvent* ev, const int& x,const int& y) {
   //Serial.println(F("INIT EvtCtrl::checkClickEvent "));
   //Serial.println(String(id));
@@ -85,8 +100,8 @@ static void EvtCtrl::checkClickedEvents(TSPoint point) {
 }
 
 
-static void EvtCtrl::clearAllEvents() {
-  //Serial.println(F("INIT EvtCtrl::clearAllEvents"));
+static void EvtCtrl::clearScreenEvents() {
+  //Serial.println(F("INIT EvtCtrl::clearScreenEvents"));
   for (uint8_t i = 0; i < screenClickEventsCount; i++) {
     if (screenClickEvents[i] != nullptr) {
       if (screenClickEvents[i]->onClickCallback != nullptr) {
@@ -98,6 +113,12 @@ static void EvtCtrl::clearAllEvents() {
   delete[] screenClickEvents;
   screenClickEvents = nullptr;
   screenClickEventsCount = 0;
+  FREERAM_PRINT;
+  //Serial.println(F("END EvtCtrl::clearScreenEvents"));   
+}
+
+static void EvtCtrl::clearTransitoryEvents() {
+  //Serial.println(F("INIT EvtCtrl::clearTransitoryEvents"));
   for (uint8_t i = 0; i < transitoryClickEventsCount; i++) {
     if (transitoryClickEvents[i] != nullptr) {
       if (transitoryClickEvents[i]->onClickCallback != nullptr) {
@@ -109,6 +130,15 @@ static void EvtCtrl::clearAllEvents() {
   delete[] transitoryClickEvents;
   transitoryClickEvents = nullptr;
   transitoryClickEventsCount = 0;
+  FREERAM_PRINT;
+  //Serial.println(F("END EvtCtrl::clearTransitoryEvents"));   
+}
+
+
+static void EvtCtrl::clearAllEvents() {
+  //Serial.println(F("INIT EvtCtrl::clearAllEvents"));
+  clearScreenEvents();
+  clearTransitoryEvents();
   FREERAM_PRINT;
   //Serial.println(F("END EvtCtrl::clearAllEvents"));   
 }

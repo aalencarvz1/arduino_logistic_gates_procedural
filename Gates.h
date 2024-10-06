@@ -10,6 +10,8 @@ extern const char* GATES_NAMES[];
 int8_t getGateIndex(char* pGateName);
 const char* getNextGateName(const char* gateName);
 const char* getPrevGateName(const char* gateName);
-void deleteGate(const Gate* g);
+void initGateMeasurements(Gate* g);
+void invertGateInput(Gate* gate,uint8_t inputIndex);
+bool calcOutputState(Gate* g);
 
 #endif

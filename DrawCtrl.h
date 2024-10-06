@@ -25,6 +25,13 @@
 #define DEFAULT_GATE_BASE_OR_ARC_HEIGHT_PERC 0.65
 #define DEFAULT_GATE_NOT_RADIUS_PERC 0.12
 #define DEFAULT_GATE_MAX_NOT_RADIUS 8.0
+#define DEFAULT_GATE_INPUT_RADIUS_PERC 0.15
+#define DEFAULT_GATE_INPUT_OFF_COLOR TFT_RED
+#define DEFAULT_GATE_INPUT_ON_COLOR TFT_GREEN
+#define DEFAULT_GATE_MAX_INPUT_BUTTON_RADIUS 15
+#define DEFAULT_GATE_MIN_INPUT_BUTTON_RADIUS 5
+
+
 
 
 
@@ -113,12 +120,14 @@ struct DrawCtrl{
     const void (*pStaticOnClick)() = nullptr, 
     const ICallback* pOnClick = nullptr
   );
-  static double drawGateNegation(const Gate* g, const double& x, const double&y, const double& h);
-  static void drawGateOutputConnector(const Gate* g, const double& x, const double&y, const double& w, const double& h, const double& connectorSize, const double& notRadius);
-  static void drawAnd(Gate* g,double x,double y, double h);  
-  static void drawOr(Gate* g,double x,double y, double h);  
-  static void drawNot(Gate* g,double x,double y, double h);  
-  static void drawGate(Gate* g,double x,double y, double h);
+  static void drawGateNegation(const Gate* g);
+  static void drawGateOutputConnector(const Gate* g);
+  static void drawGateInputsButtons(Gate* g);
+  static void drawGateOutputButton(Gate* g);
+  static void drawAnd(Gate* g);  
+  static void drawOr(Gate* g);  
+  static void drawNot(Gate* g);  
+  static void drawGate(Gate* g);
 };
 
 #endif // DRAWCTRL_H

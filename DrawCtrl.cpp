@@ -1,5 +1,6 @@
 #include "DrawCtrl.h"
 #include "EvtCtrl.h"
+#include "Gates.h"
 
 
 
@@ -361,110 +362,117 @@ static void DrawCtrl::drawOption(
   }
 }
 
-static double DrawCtrl::drawGateNegation(const Gate* g, const double& x, const double&y, const double& h) {
-  double notRadius = 0;
-  if (getBit(g->packedFlags,8)) {//hasNot
-    notRadius = h * DEFAULT_GATE_NOT_RADIUS_PERC;
-    if (notRadius > DEFAULT_GATE_MAX_NOT_RADIUS) {
-      notRadius = DEFAULT_GATE_MAX_NOT_RADIUS;
-    }
-    TSCtrl::tft.drawCircle(x+h/2.0,y-h,notRadius,TFT_WHITE);
+static void DrawCtrl::drawGateNegation(const Gate* g) {
+  if (getBit(g->packedFlags,8)) {//hasNot    
+    TSCtrl::tft.drawCircle(g->x+g->w/2.0,g->y-g->h-g->notRadius,g->notRadius,TFT_WHITE);
   }
-  return notRadius;
 }
 
-static void DrawCtrl::drawGateOutputConnector(const Gate* g, const double& x, const double&y, const double& w, const double& h, const double& connectorSize, const double& notRadius) {
-  double pcX = x + w / 2.0;
+static void DrawCtrl::drawGateOutputConnector(const Gate* g) {
   TSCtrl::tft.drawLine(
-    pcX,
-    y-h-connectorSize-notRadius,
-    pcX,
-    y-h-notRadius*2,
+    g->outputX,
+    g->outputY,
+    g->outputX,
+    g->y-g->h-g->notRadius*2,
     TFT_WHITE
   );
 }
 
+static void DrawCtrl::drawGateInputsButtons(Gate* g){
+  if (getBit(g->packedFlags,5)) {//hasInputButtons
+    for (uint8_t i = 0; i < g->inputCount; i++) {
+      auto f = [g,i](){
+        invertGateInput(g,i);
+      };
+      EvtCtrl::addTransitoryEvent(
+        drawClickable(
+          nullptr,
+          new LambdaCallback<decltype(f)>(f),
+          2,
+          g->firstInputX+i*g->inputSpaceBetwenn,
+          g->firstInputY,
+          0,
+          0,
+          g->inputRadius,
+          0,
+          !getBit(g->packedInputs,i) ? DEFAULT_GATE_INPUT_OFF_COLOR : DEFAULT_GATE_INPUT_ON_COLOR
+        )
+      );
+    }
+  }
+}
 
-static void DrawCtrl::drawAnd(Gate* g,double x,double y, double h) {
-  //negation
-  double notRadius = drawGateNegation(g,x,y,h);
+static void DrawCtrl::drawGateOutputButton(Gate* g){
+  if (getBit(g->packedFlags,7)) {//visibleOtput  
+    TSCtrl::tft.fillCircle(
+      g->outputX, 
+      g->outputY, 
+      g->inputRadius,
+      getBit(g->packedInputs,7) ? DEFAULT_GATE_INPUT_ON_COLOR : DEFAULT_GATE_INPUT_OFF_COLOR
+    );
+  }
+}
 
+static void DrawCtrl::drawAnd(Gate* g) {
+ 
   //body
-  double w = h;
-  uint8_t connectorSize = h * DEFAULT_GATE_INPUT_CONNECTOR_SIZE_PERC;
-  h -= notRadius;
-  double arcHeight = h/2.0;
-  TSCtrl::tft.drawLine(x,y,x+w,y,TFT_WHITE); //base line
-  TSCtrl::tft.drawLine(x,y-h+arcHeight,x,y,TFT_WHITE); //left line
-  TSCtrl::tft.drawLine(x+w,y-h+arcHeight,x+w,y,TFT_WHITE); //rigth line        
-  drawArcFromArrow(x,y-h+arcHeight,x+w,y-h+arcHeight,arcHeight,TFT_WHITE);   
+  double arcHeight = g->h/2.0;
+  TSCtrl::tft.drawLine(g->x,g->y,g->x+g->w,g->y,TFT_WHITE); //base line
+  TSCtrl::tft.drawLine(g->x,g->y-g->h+arcHeight,g->x,g->y,TFT_WHITE); //left line
+  TSCtrl::tft.drawLine(g->x+g->w,g->y-g->h+arcHeight,g->x+g->w,g->y,TFT_WHITE); //rigth line        
+  drawArcFromArrow(g->x,g->y-g->h+arcHeight,g->x+g->w,g->y-g->h+arcHeight,arcHeight,TFT_WHITE); //top arc   
 
   //input connectors
-  g->firstInputX = w * DEFAULT_GATE_INPUT_CONNECTOR_MARGIN_PERC;
-  
-  int16_t connSpace = 0;
-  if (g->inputCount == 1) {
-    g->firstInputX = w / 2;
-  } else {
-    connSpace = (w - g->firstInputX * 2) / (g->inputCount-1);
-  }
-  int16_t pcX = 0;
   for (uint8_t i = 0; i < g->inputCount; i++) {
-    pcX = x+g->firstInputX+i*connSpace;
     TSCtrl::tft.drawLine(
-      pcX,
-      y,
-      pcX,
-      y+connectorSize,
+      g->firstInputX+i*g->inputSpaceBetwenn,
+      g->y,
+      g->firstInputX+i*g->inputSpaceBetwenn,
+      g->firstInputY,
       TFT_WHITE
     );
   }
 
+  drawGateNegation(g);
   
-  drawGateOutputConnector(g,x,y,w,h,connectorSize,notRadius);
+  drawGateOutputConnector(g);
+
+  drawGateInputsButtons(g);
+
+  calcOutputState(g);
+
+  drawGateOutputButton(g);
 }
 
 
-static void DrawCtrl::drawOr(Gate* g,double x,double y, double h) {
-  //negation
-  double notRadius = drawGateNegation(g,x,y,h);
+static void DrawCtrl::drawOr(Gate* g) {
 
   //body
-  double w = h;
-  uint8_t connectorSize = h * DEFAULT_GATE_INPUT_CONNECTOR_SIZE_PERC;
-  h -= notRadius;
-  double arcHeight = h * DEFAULT_GATE_BASE_OR_ARC_HEIGHT_PERC;
+  double arcHeight = g->h * DEFAULT_GATE_BASE_OR_ARC_HEIGHT_PERC;
 
-  double baseArcHeight = h * DEFAULT_GATE_BASE_ARC_HEIGHT_ASPECT_RATIO;
+  double baseArcHeight = g->h * DEFAULT_GATE_BASE_ARC_HEIGHT_ASPECT_RATIO;
   CircleInfo baseArc;
 
   //draw curved base  
-  baseArc = drawArcFromArrow(x,y,x+w,y,baseArcHeight,TFT_WHITE);  
+  baseArc = drawArcFromArrow(g->x,g->y,g->x+g->w,g->y,baseArcHeight,TFT_WHITE);  
 
   //exclusive
   if (getBit(g->packedFlags,9)) {//9-exclusive
-    drawArcFromArrow(x,y+h * DEFAULT_GATE_EXCLUSIVE_SPACE_PERC,x+w,y+h * DEFAULT_GATE_EXCLUSIVE_SPACE_PERC,baseArcHeight,TFT_WHITE);
+    drawArcFromArrow(g->x,g->y+g->h * DEFAULT_GATE_EXCLUSIVE_SPACE_PERC,g->x+g->w,g->y+g->h * DEFAULT_GATE_EXCLUSIVE_SPACE_PERC,baseArcHeight,TFT_WHITE);
   }
 
   //laterals
-  TSCtrl::tft.drawLine(x,y-h+arcHeight,x,y,TFT_WHITE); //left line
-  TSCtrl::tft.drawLine(x+w,y-h+arcHeight,x+w,y,TFT_WHITE); //rigth line 
+  TSCtrl::tft.drawLine(g->x,g->y-g->h+arcHeight,g->x,g->y,TFT_WHITE); //left line
+  TSCtrl::tft.drawLine(g->x+g->w,g->y-g->h+arcHeight,g->x+g->w,g->y,TFT_WHITE); //rigth line 
 
-  //connectors
-  g->firstInputX = w * DEFAULT_GATE_INPUT_CONNECTOR_MARGIN_PERC;
-  int16_t connSpace = 0;
-  if (g->inputCount == 1) {
-    g->firstInputX = w / 2;
-  } else {
-    connSpace = (w - g->firstInputX * 2) / (g->inputCount-1);  
-  }
+  //connectors  
   double newConnectorSize,newPos;
   int16_t pcX = 0;
   for (uint8_t i = 0; i < g->inputCount * 1.0 / 2; i++) {
-    pcX = x+g->firstInputX+i*connSpace;
-    newConnectorSize = getCatetoFromPitagoras(baseArc.r,baseArc.x-(x+g->firstInputX)); 
+    pcX = g->firstInputX+i*g->inputSpaceBetwenn;
+    newConnectorSize = getCatetoFromPitagoras(baseArc.r,baseArc.x-(g->firstInputX)); 
     newPos = baseArc.y-newConnectorSize;
-    newConnectorSize = newConnectorSize - (baseArc.y - (y + connectorSize));
+    newConnectorSize = newConnectorSize - (baseArc.y - g->firstInputY);
     TSCtrl::tft.drawLine(
       pcX,
       newPos,
@@ -473,7 +481,7 @@ static void DrawCtrl::drawOr(Gate* g,double x,double y, double h) {
       TFT_WHITE
     );
     if ((i+1)>g->inputCount*1.0/2) break;
-    pcX = x+g->firstInputX+(g->inputCount-1-i)*connSpace;
+    pcX = g->firstInputX+(g->inputCount-1-i)*g->inputSpaceBetwenn;
     TSCtrl::tft.drawLine(
       pcX,
       newPos,
@@ -484,55 +492,64 @@ static void DrawCtrl::drawOr(Gate* g,double x,double y, double h) {
   }
 
   //top arcs
-  double arcHeight2 = sqrt(pow((x+(w/2.0)) - x, 2.0) + pow((y-h+arcHeight) - (y-h), 2.0));  // Distância entre P1 e P2 (lado a)
+  double arcHeight2 = sqrt(pow((g->x+(g->w/2.0)) - g->x, 2.0) + pow((g->y-g->h+arcHeight) - (g->y-g->h), 2.0));  // Distância entre P1 e P2 (lado a)
   arcHeight2 = arcHeight2 / 15; //divide o circulo em 15 partes, 
-  drawArcFromArrow(x,y-h+arcHeight,x+(w/2.0),y-h,arcHeight2,TFT_WHITE);
-  drawArcFromArrow(x+(w/2.0),y-h,x+w,y-h+arcHeight,arcHeight2,TFT_WHITE);
+  drawArcFromArrow(g->x,g->y-g->h+arcHeight,g->x+(g->w/2.0),g->y-g->h,arcHeight2,TFT_WHITE);
+  drawArcFromArrow(g->x+(g->w/2.0),g->y-g->h,g->x+g->w,g->y-g->h+arcHeight,arcHeight2,TFT_WHITE);
 
-  drawGateOutputConnector(g,x,y,w,h,connectorSize,notRadius);
+  //negation
+  drawGateNegation(g);
+
+  drawGateOutputConnector(g);
+
+  drawGateInputsButtons(g);
+
+  calcOutputState(g);
+
+  drawGateOutputButton(g);
 }
 
 
-static void DrawCtrl::drawNot(Gate* g,double x,double y, double h) {
-  //negation
-  double notRadius = drawGateNegation(g,x,y,h);
-
+static void DrawCtrl::drawNot(Gate* g) {
   //body
-  double w = h;
-  uint8_t connectorSize = h * DEFAULT_GATE_INPUT_CONNECTOR_SIZE_PERC;
-  h -= notRadius;
-  TSCtrl::tft.drawTriangle(x,y,x+w,y,x+w/2,y-h, TFT_WHITE);
+  TSCtrl::tft.drawTriangle(g->x,g->y,g->x+g->w,g->y,g->x+g->w/2,g->y-g->h, TFT_WHITE);
 
   //input connector
-  g->firstInputX = w / 2.0;
-  double pcX = x+w/2.0;
   TSCtrl::tft.drawLine(
-    pcX,
-    y,
-    pcX,
-    y+connectorSize,
+    g->firstInputX,
+    g->y,
+    g->firstInputX,
+    g->firstInputY,
     TFT_WHITE
   );
 
-  drawGateOutputConnector(g,x,y,w,h,connectorSize,notRadius);
+  drawGateNegation(g);
+
+  drawGateOutputConnector(g);
+
+  drawGateInputsButtons(g);
+
+  calcOutputState(g);
+
+  drawGateOutputButton(g);
 }
 
 
 
-static void DrawCtrl::drawGate(Gate* g,double x,double y, double h) {
+static void DrawCtrl::drawGate(Gate* g) {
   if (g != nullptr) {
     switch(g->type) {
       case 1://or
       case 4://nor
       case 5://xor
       case 6://xnor
-        drawOr(g,x,y,h);   
+        drawOr(g);   
         break;
       case 2://not
-        drawNot(g,x,y,h);   
+        drawNot(g);   
         break;
       default://0-and,nand
-        drawAnd(g,x,y,h);   
+        drawAnd(g);   
     }
   }
 }
