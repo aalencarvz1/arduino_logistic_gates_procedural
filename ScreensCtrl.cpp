@@ -5,6 +5,7 @@
 #include "Gates.h"
 #include "Gate.h"
 #include "ScreenTutorialGates.h"
+#include "ScreenPointsGates.h"
 
 
 //STATIC INITIALIZATIONS
@@ -112,8 +113,27 @@ static void ScreensCtrl::drawTutorialScreenOptions(TextInfo titleInfo) {
   drawGateButton(pX,pY,pR,col+3,lin,hSpace,TFT_PURPLE,GATES_NAMES[6]);
 }
 
-static void ScreensCtrl::drawTutorialGatesScreen(TextInfo titleInfo, char* params[]) {  
-  ScreenTutorialGates::draw(titleInfo, params);
+static void ScreensCtrl::drawPoitnsScreenOptions(TextInfo titleInfo) {
+  double pX = TSCtrl::tft.width() / 2;
+  pX = pX /2;
+  double pY = TSCtrl::tft.height() / 2 - 10;
+  double pR = pY;
+  if (pY > pX) {
+    pR = pX;
+  }
+  pR = pR * 0.4;
+
+  DrawCtrl::drawOption(
+    pX,
+    pY,
+    pR,
+    Colors::BLUE,
+    true,
+    "Jogar",
+    []{
+      ScreensCtrl::goTo(30);
+    }
+  );
 }
 
 static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
@@ -140,6 +160,12 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
       break;
     case 20: //tutorial gates
       title = "MODO TUTORIAL-PORTAS";
+      break;
+    case 3: //tutorial gates
+      title = "MODO PONTUACAO";
+      break;
+    case 30: //tutorial gates
+      title = "MODO PONTUACAO";
       break;
     default: 
       title = "NAO ENCONTRADO";      
@@ -191,7 +217,13 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
       drawTutorialScreenOptions(titleInfo);      
       break;
     case 20: //tutorial-gates
-      drawTutorialGatesScreen(titleInfo, params);      
+      ScreenTutorialGates::draw(titleInfo, params);
+      break;
+    case 3: //points
+      drawPoitnsScreenOptions(titleInfo);      
+      break;
+    case 30: //points
+      ScreenPointsGates::draw(titleInfo, params);
       break;
     default: 
       DrawCtrl::drawCenteredText("Nada aqui",TSCtrl::tft.height()/2);      
