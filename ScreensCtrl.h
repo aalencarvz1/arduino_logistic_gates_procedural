@@ -19,7 +19,7 @@ struct ScreensCtrl{
   );
   static void drawHomeScreenOptions(TextInfo titleInfo);
   static void drawTutorialScreenOptions(TextInfo titleInfo);
-  static void drawTutorialGatesScreen(TextInfo titleInfo, char* params[]);
+  static void drawPoitnsScreenOptions(TextInfo titleInfo);
   static void goTo(uint8_t screenId, char* params[] = nullptr);
   static void goBack();
 };
