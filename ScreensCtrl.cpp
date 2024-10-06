@@ -4,6 +4,7 @@
 #include "Colors.h"
 #include "Gates.h"
 #include "Gate.h"
+#include "ScreenTutorialGates.h"
 
 
 //STATIC INITIALIZATIONS
@@ -38,15 +39,13 @@ void ScreensCtrl::drawGateButton(
   );
 
   if (pGateName != nullptr) {    
-    Gate* g = new Gate();
-    g->type = getGateIndex(pGateName);
+    Gate* g = new Gate(getGateIndex(pGateName),pX-pR/2.0,pY+pR/2.0,pR);
     setBit(g->packedFlags,5,false);//5-hasInputButtons
     setBit(g->packedFlags,6,false);//6-visibleInputs
-    if (g->type == 2 || g->type == 3 || g->type == 4 || g->type == 6) setBit(g->packedFlags,8,true);//negation
-    if (g->type == 6) setBit(g->packedFlags,9,true);//exclusive
-    g->inputCount = 2;  
-    DrawCtrl::drawGate(g,pX-pR/2.0,pY+pR/2.0,pR);
-    deleteGate(g);
+    setBit(g->packedFlags,7,false);//5-visibleOutput
+    initGateMeasurements(g);
+    DrawCtrl::drawGate(g);
+    delete g;
   };
 
 }
@@ -113,8 +112,19 @@ static void ScreensCtrl::drawTutorialScreenOptions(TextInfo titleInfo) {
   drawGateButton(pX,pY,pR,col+3,lin,hSpace,TFT_PURPLE,GATES_NAMES[6]);
 }
 
+static void ScreensCtrl::drawTutorialGatesScreen(TextInfo titleInfo, char* params[]) {  
+  ScreenTutorialGates::draw(titleInfo, params);
+}
+
 static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
   Serial.println(F("INIT ScreensCtrl::goTo"));
+
+  if (!!stack.isEmpty()) {
+    //if (stack.peek() == 20) {
+      //ScreenTutorialGates::freeMemory();
+    //}
+  }
+
   Serial.println("screenId "+String(screenId));
   EvtCtrl::clearAllEvents();
   TSCtrl::tft.fillScreen(DEFAULT_BACKGROUND_COLOR);
@@ -179,6 +189,9 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
       break;
     case 2: //tutorial
       drawTutorialScreenOptions(titleInfo);      
+      break;
+    case 20: //tutorial-gates
+      drawTutorialGatesScreen(titleInfo, params);      
       break;
     default: 
       DrawCtrl::drawCenteredText("Nada aqui",TSCtrl::tft.height()/2);      

@@ -1,6 +1,7 @@
 #ifndef CLICKEVENT_H
 #define CLICKEVENT_H
 
+#include <stdint.h>
 #include "LambdaCallback.h"
 
 struct ClickEvent{
@@ -9,6 +10,7 @@ struct ClickEvent{
   int16_t y=0;
   int16_t m1=0;
   int16_t m2=0;
+  bool enabled = true;
 	void (*staticOnClick)() = nullptr;
   ICallback* onClickCallback = nullptr;  // Ponteiro para o callback
 };

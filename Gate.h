@@ -25,10 +25,17 @@
 
 struct Gate {
 	uint8_t type = 0;
-  uint8_t inputCount = 0;
+  uint16_t x = 0;
+  uint16_t y = 0;
+  uint16_t h = 0;
+  uint16_t w = 0;
+  uint8_t inputCount = 2;
 	int16_t firstInputX = 0;
 	int16_t firstInputY = 0;
 	uint8_t inputSpaceBetwenn = 0;
+  uint8_t inputRadius = 0;
+  uint8_t notRadius = 0;
+  uint8_t connectorSize = 0;
 	int16_t outputX = 0;
 	int16_t outputY = 0;
 
@@ -40,6 +47,16 @@ struct Gate {
 	Gate** connectedGates = nullptr; 
 	uint8_t** connectedInputs = nullptr;
 	uint8_t connectedGatesQty = 0;
+  Gate(
+    uint8_t pType = 0,
+    uint16_t pX = 0,
+    uint16_t pY = 0,
+    uint16_t pH = 0,
+    uint16_t pW = 0,
+    uint8_t pInputCount = 2
+  );
+  ~Gate();
+
 };
 
 
