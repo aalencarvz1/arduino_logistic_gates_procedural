@@ -376,10 +376,27 @@ static void DrawCtrl::drawGateOutputConnector(const Gate* g) {
     g->y-g->h-g->notRadius*2,
     TFT_WHITE
   );
+
+  if (g->connectedGates != nullptr && g->connectedGatesQty > 0) {
+    for(uint8_t i = 0; i < g->connectedGatesQty; i++) {
+      for(uint8_t j = 0; j < 8; j++) {        
+        if (getBit(g->connectedInputs[i],j)) {
+          TSCtrl::tft.drawLine(
+            g->outputX,
+            g->outputY,
+            g->connectedGates[i]->firstInputX+g->connectedGates[i]->inputSpaceBetwenn*j,
+            g->connectedGates[i]->firstInputY,
+            TFT_WHITE
+          );
+        }
+      }
+    }
+  }
+
 }
 
 static void DrawCtrl::drawGateInputsButtons(Gate* g){
-  if (getBit(g->packedFlags,5)) {//hasInputButtons
+  if (getBit(g->packedFlags,5) && getBit(g->packedFlags,6)) {//hasInputButtons, visible inputs
     for (uint8_t i = 0; i < g->inputCount; i++) {
       auto f = [g,i](){
         invertGateInput(g,i);
@@ -535,6 +552,31 @@ static void DrawCtrl::drawNot(Gate* g) {
 }
 
 
+static void DrawCtrl::drawBypass(Gate* g) {
+  //body
+  TSCtrl::tft.drawLine(g->x + g->w / 2,g->y-g->h,g->x+g->w/2,g->y,TFT_WHITE); //base line  
+
+  //input connector
+  TSCtrl::tft.drawLine(
+    g->firstInputX,
+    g->y,
+    g->firstInputX,
+    g->firstInputY,
+    TFT_WHITE
+  );
+
+  drawGateNegation(g);
+
+  drawGateOutputConnector(g);
+
+  drawGateInputsButtons(g);
+
+  calcOutputState(g);
+
+  drawGateOutputButton(g);
+}
+
+
 
 static void DrawCtrl::drawGate(Gate* g) {
   if (g != nullptr) {
@@ -547,6 +589,9 @@ static void DrawCtrl::drawGate(Gate* g) {
         break;
       case 2://not
         drawNot(g);   
+        break;
+      case 7://bypass
+        drawBypass(g);   
         break;
       default://0-and,nand
         drawAnd(g);   

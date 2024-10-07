@@ -13,6 +13,10 @@
 #define DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_COLOR TFT_WHITE
 #define DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN 5
 #define DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_RADIUS 10
+#define DEFAULT_WINDOW_CONTAINER_Y 27
+#define DEFAULT_WINDOW_CONTAINER_H 291
+#define DEFAULT_WINDOW_CONTAINER_SUBTITLE_H 22
+#define DEFAULT_WINDOW_CONTAINER_AFTER_SUBTITLE_Y 49
 #define DEFAULT_WINDOW_TITLE_TEXT_SIZE 2
 #define DEFAULT_TEXT_SIZE 2
 #define DEFAULT_TEXT_COLOR TFT_WHITE
@@ -127,6 +131,7 @@ struct DrawCtrl{
   static void drawAnd(Gate* g);  
   static void drawOr(Gate* g);  
   static void drawNot(Gate* g);  
+  static void drawBypass(Gate* g); 
   static void drawGate(Gate* g);
 };
 
