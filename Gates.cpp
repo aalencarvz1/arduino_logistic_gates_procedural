@@ -1,4 +1,5 @@
 #include "Gates.h"
+#include <MemoryUsage.h>
 #include <string.h>
 #include "DrawCtrl.h"
 
@@ -54,6 +55,7 @@ const char* getPrevGateName(const char* gateName) {
 
 void initGateMeasurements(Gate* g) {
   if (g != nullptr) {
+    g->connectorSize = g->h * DEFAULT_GATE_INPUT_CONNECTOR_SIZE_PERC;
     g->notRadius = 0;
     if (getBit(g->packedFlags,8)) {//hasNot
       g->notRadius = g->h * DEFAULT_GATE_NOT_RADIUS_PERC;
@@ -68,7 +70,7 @@ void initGateMeasurements(Gate* g) {
     } else if (g->inputRadius < DEFAULT_GATE_MIN_INPUT_BUTTON_RADIUS) {
       g->inputRadius = DEFAULT_GATE_MIN_INPUT_BUTTON_RADIUS;
     }
-    g->connectorSize = g->h * DEFAULT_GATE_INPUT_CONNECTOR_SIZE_PERC;
+    
     g->firstInputX = g->x + g->w * DEFAULT_GATE_INPUT_CONNECTOR_MARGIN_PERC;  
     g->inputSpaceBetwenn = 0;
     if (g->inputCount == 1) {
@@ -125,18 +127,84 @@ bool calcOutputState(Gate* g) {
   return outputState;
 }
 
-void invertGateInput(Gate* gate,uint8_t inputIndex) {
+/*
+* method called when user click on input of gate
+* invert current state of input and recalculate gate output state (bit 8 of packed inputs)
+* redraw input clicked and output state if changed
+*/
+void setGateInputState(Gate* gate,uint8_t inputIndex, bool newState) {
   if (gate != nullptr) {
     bool currentInputState = getBit(gate->packedInputs,inputIndex);
-    setBit(gate->packedInputs,inputIndex,!currentInputState);
-    TSCtrl::tft.fillCircle(
-      gate->firstInputX + gate->inputSpaceBetwenn * inputIndex, 
-      gate->firstInputY, 
-      gate->inputRadius,
-      !currentInputState ? DEFAULT_GATE_INPUT_ON_COLOR : DEFAULT_GATE_INPUT_OFF_COLOR
-    );
-    calcOutputState(gate);
-    Serial.println(boolToString(getBit(gate->packedInputs,7)));
-    DrawCtrl::drawGateOutputButton(gate);
+    if (currentInputState != newState) {
+      setBit(gate->packedInputs,inputIndex,newState);
+      if (getBit(gate->packedFlags,6)) {//visible inputs
+        TSCtrl::tft.fillCircle(
+          gate->firstInputX + gate->inputSpaceBetwenn * inputIndex, 
+          gate->firstInputY, 
+          gate->inputRadius,
+          newState ? DEFAULT_GATE_INPUT_ON_COLOR : DEFAULT_GATE_INPUT_OFF_COLOR
+        );
+      }
+      bool currentOutputState = getBit(gate->packedInputs,7);
+      calcOutputState(gate);    
+      if (currentOutputState != getBit(gate->packedInputs,7)) {
+        DrawCtrl::drawGateOutputButton(gate);
+        if (gate->connectedGates != nullptr && gate->connectedGatesQty > 0) {
+          for(uint8_t i = 0; i < gate->connectedGatesQty; i++) {
+            for(uint8_t j = 0; j < 8; j++) {
+              if (getBit(gate->connectedInputs[i],j)) {
+                setGateInputState(gate->connectedGates[i],j,getBit(gate->packedInputs,7));
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
+
+
+/*
+* method called when user click on input of gate
+* invert current state of input and recalculate gate output state (bit 8 of packed inputs)
+* redraw input clicked and output state if changed
+*/
+void invertGateInput(Gate* gate,uint8_t inputIndex) {
+  if (gate != nullptr) {
+    setGateInputState(gate,inputIndex,!getBit(gate->packedInputs,inputIndex));    
+  }
+}
+
+void addConnectedGate(Gate* originOutput,Gate* destinyGate,uint8_t destinyInputIndex) {    
+  Gate** newConnectedGates = new Gate*[originOutput->connectedGatesQty + 1];    
+  for (uint8_t i = 0; i < originOutput->connectedGatesQty; i++) {
+    newConnectedGates[i] = originOutput->connectedGates[i];
+  }
+  newConnectedGates[originOutput->connectedGatesQty] = destinyGate;
+  if (originOutput->connectedGates != nullptr) {
+    delete[] originOutput->connectedGates;
+  }
+  originOutput->connectedGates = newConnectedGates;
+  
+  
+  uint8_t* newConnectedGatesInputs = new uint8_t[originOutput->connectedGatesQty + 1];    
+  for (uint8_t i = 0; i < originOutput->connectedGatesQty; i++) {
+    newConnectedGatesInputs[i] = originOutput->connectedInputs[i];
+  }
+  uint8_t newDestinyInputIndexs = 0b00000000;
+  setBit(newDestinyInputIndexs,destinyInputIndex,true);
+
+  setGateInputState(destinyGate,destinyInputIndex,calcOutputState(originOutput));
+
+  newConnectedGatesInputs[originOutput->connectedGatesQty] = newDestinyInputIndexs;
+  if (originOutput->connectedInputs != nullptr) {
+    delete[] originOutput->connectedInputs;
+  }
+  originOutput->connectedInputs = newConnectedGatesInputs;
+
+
+  originOutput->connectedGatesQty++;
+
+  FREERAM_PRINT;
+}
+

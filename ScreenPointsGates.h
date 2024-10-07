@@ -4,6 +4,7 @@
 
 #include "ClickEvent.h"
 #include "DrawCtrl.h"
+#include "Circuit.h"
 
 #define DEFAULT_PHASE_TIME_INTERVAL 200
 
@@ -19,6 +20,7 @@ struct ScreenPointsGates {
   static TextInfo titleInfo;
   static TextInfo subTitleInfo;
   static Gate* currentGate;
+  static Circuit* currentCircuit;
   static bool initialState;
   static bool updateInitialState;
   static void freeMemory();

@@ -11,7 +11,9 @@
 void setup() {
   Serial.begin(9600);
   TSCtrl::init(); 
+  
   ScreensCtrl::goTo(30);
+  
   /*
   //gate draw test
   TSCtrl::tft.fillScreen(DEFAULT_BACKGROUND_COLOR);

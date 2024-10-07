@@ -139,11 +139,16 @@ static void ScreensCtrl::drawPoitnsScreenOptions(TextInfo titleInfo) {
 static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
   Serial.println(F("INIT ScreensCtrl::goTo"));
 
-  if (!!stack.isEmpty()) {
-    //if (stack.peek() == 20) {
-      //ScreenTutorialGates::freeMemory();
-    //}
-  }
+  if (!stack.isEmpty()) {
+    switch(stack.peek()) {
+      case 20:
+        ScreenTutorialGates::freeMemory();
+        break;
+      case 30:
+        ScreenPointsGates::freeMemory();
+        break;
+    }
+  } 
 
   Serial.println("screenId "+String(screenId));
   EvtCtrl::clearAllEvents();

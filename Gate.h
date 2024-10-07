@@ -44,9 +44,18 @@ struct Gate {
   //                       5432109876543210  
 	uint16_t packedFlags = 0b0000000011111111;
 	uint8_t packedInputs = 0b00000000;	
+
+  
+
 	Gate** connectedGates = nullptr; 
-	uint8_t** connectedInputs = nullptr;
+	uint8_t* connectedInputs = nullptr;
 	uint8_t connectedGatesQty = 0;
+  
+  //represent level when this gate is part of cirtuic, base on head gate as 0
+  uint8_t currentCircuitLevel = 0;
+  
+  //represent index of inputs wich has output connected to this to use in circuits
+  uint8_t packedInputsWithOtputs = 0b00000000;	
   Gate(
     uint8_t pType = 0,
     uint16_t pX = 0,

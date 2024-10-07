@@ -6,7 +6,7 @@
 
 
 //STATIC INITIALIZATIONS
-static uint8_t ScreenPointsGates::currentLevel = 1;
+static uint8_t ScreenPointsGates::currentLevel = 5;
 static uint8_t ScreenPointsGates::currentPhase = 1;
 static uint8_t ScreenPointsGates::currentPontuation = 0;
 static double ScreenPointsGates::gateX = 0;
@@ -15,6 +15,7 @@ static double ScreenPointsGates::gateSize = 0;
 static double ScreenPointsGates::gateWidth = 0;
 static char* ScreenPointsGates::currentGateName = GATES_NAMES[0];
 static Gate* ScreenPointsGates::currentGate = nullptr;
+static Circuit* ScreenPointsGates::currentCircuit = nullptr;
 static TextInfo ScreenPointsGates::titleInfo;
 static TextInfo ScreenPointsGates::subTitleInfo;
 static bool ScreenPointsGates::initialState = false;
@@ -27,6 +28,10 @@ static void ScreenPointsGates::freeMemory() {
   if (currentGate != nullptr) {
     delete currentGate;
     currentGate = nullptr;
+  }
+  if (currentCircuit != nullptr) {
+    delete currentCircuit;
+    currentCircuit = nullptr;
   }
 }
 
@@ -146,7 +151,13 @@ static void ScreenPointsGates::drawGateLevel(bool pClearGateSpace) {
 }
 
 static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
-  
+  uint8_t gatesIds[] = {0,2,7,255}; 
+  subTitleInfo = DrawCtrl::drawCenteredText("Ative o circuito",titleInfo.y + titleInfo.h +10);
+  currentCircuit = new Circuit(
+    2,
+    gatesIds
+  );
+
 }
 
 static void ScreenPointsGates::drawNextPhase(bool pClearSpaces){
@@ -154,6 +165,10 @@ static void ScreenPointsGates::drawNextPhase(bool pClearSpaces){
   if (currentGate != nullptr) {
     delete currentGate;
     currentGate = nullptr;
+  }
+  if (currentCircuit != nullptr) {
+    delete currentCircuit;
+    currentCircuit = nullptr;
   }
   drawLevelAndPhase();  
   if (currentLevel <= 4) { //gates
