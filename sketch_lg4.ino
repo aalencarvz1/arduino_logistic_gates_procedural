@@ -12,7 +12,7 @@ void setup() {
   Serial.begin(9600);
   TSCtrl::init(); 
   
-  ScreensCtrl::goTo(30);
+  ScreensCtrl::goTo(1);
   
   /*
   //gate draw test
@@ -27,8 +27,7 @@ void setup() {
     7
   );
   initGateMeasurements(g);
-  DrawCtrl::drawGate(g);
-  */
+  DrawCtrl::drawGate(g);*/
 }
 
 void loop() {

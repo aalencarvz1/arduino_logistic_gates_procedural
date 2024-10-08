@@ -6,7 +6,7 @@
 
 
 //STATIC INITIALIZATIONS
-static uint8_t ScreenPointsGates::currentLevel = 5;
+static uint8_t ScreenPointsGates::currentLevel = 1;
 static uint8_t ScreenPointsGates::currentPhase = 1;
 static uint8_t ScreenPointsGates::currentPontuation = 0;
 static double ScreenPointsGates::gateX = 0;
@@ -96,6 +96,25 @@ static void ScreenPointsGates::clearGateSapce(){
   );
 }
 
+static void ScreenPointsGates::clearAllSpaces(){
+  //clear spaces
+  TSCtrl::tft.fillRoundRect(
+    DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_WIDTH,
+    DEFAULT_WINDOW_CONTAINER_AFTER_SUBTITLE_Y+20,
+    TSCtrl::tft.width()-DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN*2-DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_WIDTH*2,
+    TSCtrl::tft.height()-DEFAULT_WINDOW_CONTAINER_AFTER_SUBTITLE_Y-21,
+    DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_RADIUS,
+    DEFAULT_BACKGROUND_COLOR    
+  );
+  TSCtrl::tft.fillRect(
+    DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_WIDTH+95,
+    DEFAULT_WINDOW_CONTAINER_AFTER_SUBTITLE_Y,
+    TSCtrl::tft.width()-DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN*2-DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_WIDTH*2-95*2,
+    DEFAULT_WINDOW_CONTAINER_SUBTITLE_H,
+    DEFAULT_BACKGROUND_COLOR
+  );
+}
+
 static void ScreenPointsGates::drawGateLevel(bool pClearGateSpace) {
   if (pClearGateSpace) {
     clearGateSapce();
@@ -151,12 +170,120 @@ static void ScreenPointsGates::drawGateLevel(bool pClearGateSpace) {
 }
 
 static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
-  uint8_t gatesIds[] = {0,2,7,255}; 
-  subTitleInfo = DrawCtrl::drawCenteredText("Ative o circuito",titleInfo.y + titleInfo.h +10);
-  currentCircuit = new Circuit(
-    2,
-    gatesIds
-  );
+  clearAllSpaces();
+  uint8_t* gatesIds = nullptr;  
+  switch (currentLevel) {
+    case 5:
+      switch (currentPhase) {
+        case 1:
+          gatesIds = new uint8_t[4]{0,2,7,255}; 
+          TSCtrl::tft.fillRect(subTitleInfo.x-10,subTitleInfo.y-8,subTitleInfo.w+10,subTitleInfo.h+4, DEFAULT_BACKGROUND_COLOR);
+          subTitleInfo = DrawCtrl::drawCenteredText("Ative o circuito",titleInfo.y + titleInfo.h +10);            
+          currentCircuit = new Circuit(2,gatesIds);
+          break;
+        case 2:
+          gatesIds = new uint8_t[3]{2,0,255}; 
+          currentCircuit = new Circuit(2,gatesIds);
+          break;
+        case 3:
+          gatesIds = new uint8_t[4]{1,0,2,255}; 
+          currentCircuit = new Circuit(2,gatesIds);
+          break;
+        case 4:
+          gatesIds = new uint8_t[4]{0,0,5,255}; 
+          currentCircuit = new Circuit(2,gatesIds);
+          break;
+        case 5:
+          gatesIds = new uint8_t[4]{0,0,1,255}; 
+          currentCircuit = new Circuit(2,gatesIds);
+          break;
+      }
+      break;
+    case 6:
+      Gate *g,*g0,*g1,*g2;
+      switch (currentPhase) {
+        case 1: 
+          gatesIds = new uint8_t[5]{0,0,5,7,255}; 
+          currentCircuit = new Circuit(3,gatesIds);
+
+          g0 = currentCircuit->gates[currentCircuit->gateCount-1];
+          g1 = currentCircuit->gates[currentCircuit->gateCount-2];
+          g2 = currentCircuit->gates[currentCircuit->gateCount-3];
+          g = currentCircuit->createGate(
+            7,
+            false,
+            g2->x + g2->w + (g1->x - (g2->x + g2->w)) / 2 - g0->w / 2,
+            0,
+            0,
+            0,
+            g2,
+            1
+          );
+          addConnectedGate(g,g1,0);
+          DrawCtrl::drawGate(g);
+          currentCircuit->createGate(7,true,0,0,0,0,g1,1);
+          break;
+        case 2: 
+          gatesIds = new uint8_t[5]{0,0,1,7,255}; 
+          currentCircuit = new Circuit(3,gatesIds);
+
+          g0 = currentCircuit->gates[currentCircuit->gateCount-1];
+          g1 = currentCircuit->gates[currentCircuit->gateCount-2];
+          g2 = currentCircuit->gates[currentCircuit->gateCount-3];
+          g = currentCircuit->createGate(
+            7,
+            false,
+            g2->x + g2->w + (g1->x - (g2->x + g2->w)) / 2 - g0->w / 2,
+            0,
+            0,
+            0,
+            g2,
+            1
+          );
+          addConnectedGate(g,g1,0);
+          DrawCtrl::drawGate(g);
+          currentCircuit->createGate(7,true,0,0,0,0,g1,1);
+          break;
+        case 3: 
+          gatesIds = new uint8_t[4]{1,3,0,255}; 
+          currentCircuit = new Circuit(2,gatesIds);
+          break;
+        case 4: 
+          gatesIds = new uint8_t[5]{1,3,1,7,255}; 
+          currentCircuit = new Circuit(3,gatesIds);
+
+          g0 = currentCircuit->gates[currentCircuit->gateCount-1];
+          g1 = currentCircuit->gates[currentCircuit->gateCount-2];
+          g2 = currentCircuit->gates[currentCircuit->gateCount-3];
+          g = currentCircuit->createGate(
+            7,
+            false,
+            g2->x + g2->w + (g1->x - (g2->x + g2->w)) / 2 - g0->w / 2,
+            0,
+            0,
+            0,
+            g2,
+            1
+          );
+          addConnectedGate(g,g1,0);
+          DrawCtrl::drawGate(g);
+          currentCircuit->createGate(7,true,0,0,0,0,g1,1);
+          break;
+        case 5: 
+          gatesIds = new uint8_t[4]{6,3,6,255}; 
+          currentCircuit = new Circuit(2,gatesIds);
+          break;
+      }
+      break;
+    case 7:
+      switch (currentPhase) {
+        case 1: 
+          gatesIds = new uint8_t[14]{1,0,0,2,5,4,2,3,2,6,3,1,6,255}; 
+          currentCircuit = new Circuit(4,gatesIds);
+          break;
+      }
+  }
+  
 
 }
 

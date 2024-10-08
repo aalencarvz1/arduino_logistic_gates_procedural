@@ -9,7 +9,6 @@ Circuit::Circuit(
 ) : 
   gateLevelCount(pGateLevelCount)
 {
-  gates = new Gate*[gateLevelCount]{nullptr};
   if (pGateIds != nullptr) {
     createGates(pGateIds);
   }
@@ -25,14 +24,19 @@ Circuit::~Circuit(){
   }
 }
 
+/*void Circuit::addGate(Gate* pGate) {
+  Gate** newGates = 
+}*/
+
 Gate* Circuit::getNextGateInputConnector(uint8_t& pOutputInpuIndex) {
   Gate* result = nullptr;
   if (gates != nullptr) {
-    for (uint8_t i = 0; i < sizeof(gates) / sizeof(gates[0]); i++) {
+    for (uint8_t i = 0; i < gateCount; i++) {
       if (gates[i] != nullptr) {
-        for (uint8_t j = 0 ; j < 8; j++) {
-          Serial.println("xxxxx searching in gate " + String(i));
+        for (uint8_t j = 0 ; j < gates[i]->inputCount; j++) {
+          Serial.println("xxxxx searching in gate " + String(i) + ", inputIndex "+String(j));
           if (!getBit(gates[i]->packedInputsWithOtputs,j)) {
+            Serial.println("  found ");
             pOutputInpuIndex = j;
             result = gates[i];
             break;
@@ -47,6 +51,7 @@ Gate* Circuit::getNextGateInputConnector(uint8_t& pOutputInpuIndex) {
 
 Gate* Circuit::createGate(
   uint8_t pGateId,
+  bool draw,
   int pX,
   int pY,
   double pSize,
@@ -80,7 +85,7 @@ Gate* Circuit::createGate(
   double currentGateSapce = lastLevelWidth / pow(2,currentCircuitLevel);
 
   if (pX == 0) {
-    if (gates[0] == nullptr) {
+    if (gates == nullptr || gates[0] == nullptr) {
         pX = TSCtrl::tft.width() / 2 - pWidth / 2;
     } else if (pOutputGate != nullptr) {            
       double levelGateWidth = pOutputGate->inputCount * currentGateSapce;
@@ -91,7 +96,7 @@ Gate* Circuit::createGate(
   }
 
   if (pY == 0) {
-    if (gates[0] == nullptr) {
+    if (gates == nullptr || gates[0] == nullptr) {
       pY = DEFAULT_WINDOW_CONTAINER_AFTER_SUBTITLE_Y + pSize + pSize * DEFAULT_GATE_INPUT_CONNECTOR_SIZE_PERC * 2;
     } else if (pOutputGate != nullptr) {
       pY = pOutputGate->y + pOutputGate->connectorSize * 2 + pSize;  //@todo implement detect current input wich is connectec output this gate to calculate x, implement on set inputoutpu, set also gateoutput on inpu
@@ -115,11 +120,16 @@ Gate* Circuit::createGate(
     addConnectedGate(g,pOutputGate,pOutputInpuIndex);
   }
 
-  setBit(g->packedFlags,7,false);//visible output
+  //setBit(g->packedFlags,7,false);//visible output
   if (g->currentCircuitLevel < gateLevelCount -1) {
     setBit(g->packedFlags,6,false);//visible inputs    
   }
 
+  addGateToGateArray(gates,g,gateCount);
+  Serial.println("yyyyyyyyyyyyyyyy"+String(gateCount));
+  if (draw) {
+    DrawCtrl::drawGate(g);
+  }
   Serial.println(F("END Circuit::createGate"));
   return g;
 }
@@ -133,10 +143,9 @@ void Circuit::createGates(uint8_t pGateIds[]) {
       Serial.println("creating " + String(i) + " " + String(pGateIds[i]));
       if (pGateIds[i] == 255) break;
       g = createGate(pGateIds[i]);
-      if (g != nullptr) {
-        gates[i] = g;
+      /*if (g != nullptr) {
         DrawCtrl::drawGate(g);
-      }
+      }*/
       i++;
     }
   }

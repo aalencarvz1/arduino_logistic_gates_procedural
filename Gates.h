@@ -13,6 +13,7 @@ const char* getPrevGateName(const char* gateName);
 void initGateMeasurements(Gate* g);
 void invertGateInput(Gate* gate,uint8_t inputIndex);
 bool calcOutputState(Gate* g);
-void addConnectedGate(Gate* originOutput,Gate* destinyGate,uint8_t destinyInputIndex);
+void addGateToGateArray(Gate**& pGateArray, Gate*& pGate, uint8_t& currentCount);
+void addConnectedGate(Gate*& originOutput,Gate*& destinyGate,uint8_t destinyInputIndex);
 
 #endif

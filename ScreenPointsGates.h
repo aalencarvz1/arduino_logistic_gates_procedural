@@ -28,6 +28,7 @@ struct ScreenPointsGates {
   static void drawCurrentPontuation();
   static void drawLevelAndPhase();
   static void clearGateSapce();
+  static void clearAllSpaces();
   static void drawGateLevel(bool pClearGateSpace = true);
   static void drawCircuitLevel(bool pClearSpaces = true);
   static void drawNextPhase(bool pClearSpaces = true);
