@@ -76,13 +76,21 @@ Gate* Circuit::createGate(
     currentCircuitLevel = pOutputGate->currentCircuitLevel + 1;
   }
   if (pSize == 0) {
-    pSize = ((DEFAULT_WINDOW_CONTAINER_H - DEFAULT_WINDOW_CONTAINER_SUBTITLE_H) / gateLevelCount) * DEFAULT_GATE_VERTICAL_SIZE_PERC;
+    pSize = ((DEFAULT_WINDOW_CONTAINER_H /*- DEFAULT_WINDOW_CONTAINER_SUBTITLE_H*/) / gateLevelCount) * DEFAULT_GATE_VERTICAL_SIZE_PERC;
   }
   if (pWidth == 0) {
     pWidth = pSize;
   }
   double lastLevelWidth = (pow(2,gateLevelCount - 1) * pWidth) + ((pow(2,gateLevelCount - 1) - 1) * (pWidth * DEFAULT_GATE_VERTICAL_SIZE_PERC ));
+
+  if (lastLevelWidth > DEFAULT_WINDOW_CONTAINER_W) {
+    lastLevelWidth = DEFAULT_WINDOW_CONTAINER_W;
+    pWidth = (lastLevelWidth / pow(2,gateLevelCount - 1));
+    pWidth = pWidth - pWidth * 0.2; //minimal space
+  }
+
   double currentGateSapce = lastLevelWidth / pow(2,currentCircuitLevel);
+  Serial.println("lastLevelWidth "+String(lastLevelWidth) + ", currentGateSapce " + String(currentGateSapce));
 
   if (pX == 0) {
     if (gates == nullptr || gates[0] == nullptr) {
@@ -120,7 +128,7 @@ Gate* Circuit::createGate(
     addConnectedGate(g,pOutputGate,pOutputInpuIndex);
   }
 
-  //setBit(g->packedFlags,7,false);//visible output
+  setBit(g->packedFlags,7,false);//visible output
   if (g->currentCircuitLevel < gateLevelCount -1) {
     setBit(g->packedFlags,6,false);//visible inputs    
   }

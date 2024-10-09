@@ -6,6 +6,10 @@
 
 
 //STATIC INITIALIZATIONS
+
+static ClickEvent* ScreenPointsGates::confirmEvent = nullptr;
+static bool ScreenPointsGates::nextEnabled = false;
+static ClickEvent* ScreenPointsGates::nextEv = nullptr;
 static uint8_t ScreenPointsGates::currentLevel = 1;
 static uint8_t ScreenPointsGates::currentPhase = 1;
 static uint8_t ScreenPointsGates::currentPontuation = 0;
@@ -36,24 +40,23 @@ static void ScreenPointsGates::freeMemory() {
 }
 
 static void ScreenPointsGates::drawConfirmButton(){
-  EvtCtrl::addScreenEvent(
-    DrawCtrl::drawClickable(
-      []{
-        ScreenPointsGates::confirm();
-      },
-      nullptr,
-      1,
-      TSCtrl::tft.width()-DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN-120,
-      0,
-      120,
-      25,
-      0,
-      3,
-      Colors::GREEN,
-      true,
-      "Confirmar"
-    )
+  confirmEvent = DrawCtrl::drawClickable(
+    []{
+      ScreenPointsGates::confirm();
+    },
+    nullptr,
+    1,
+    TSCtrl::tft.width()-DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN-120,
+    0,
+    120,
+    25,
+    0,
+    3,
+    Colors::GREEN,
+    true,
+    "Confirmar"
   );
+  EvtCtrl::addScreenEvent(confirmEvent);
 }
 
 static void ScreenPointsGates::drawCurrentPontuation(){
@@ -174,6 +177,7 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
   uint8_t* gatesIds = nullptr;  
   switch (currentLevel) {
     case 5:
+      updateInitialState = false;
       switch (currentPhase) {
         case 1:
           gatesIds = new uint8_t[4]{0,2,7,255}; 
@@ -199,10 +203,13 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
           break;
       }
       break;
-    case 6:
+    case 6:      
+      updateInitialState = true;
       Gate *g,*g0,*g1,*g2;
       switch (currentPhase) {
         case 1: 
+          TSCtrl::tft.fillRect(subTitleInfo.x-10,subTitleInfo.y-8,subTitleInfo.w+10,subTitleInfo.h+4, DEFAULT_BACKGROUND_COLOR);
+          subTitleInfo = DrawCtrl::drawCenteredText("Mude o estado inicial",titleInfo.y + titleInfo.h +10);
           gatesIds = new uint8_t[5]{0,0,5,7,255}; 
           currentCircuit = new Circuit(3,gatesIds);
 
@@ -275,11 +282,37 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
           break;
       }
       break;
-    case 7:
+    case 7:      
       switch (currentPhase) {
         case 1: 
+          TSCtrl::tft.fillRect(subTitleInfo.x-10,subTitleInfo.y-8,subTitleInfo.w+10,subTitleInfo.h+4, DEFAULT_BACKGROUND_COLOR);
+          subTitleInfo = DrawCtrl::drawCenteredText("Mude o estado inicial",titleInfo.y + titleInfo.h +10);
           gatesIds = new uint8_t[14]{1,0,0,2,5,4,2,3,2,6,3,1,6,255}; 
           currentCircuit = new Circuit(4,gatesIds);
+          break;
+        case 2: 
+          gatesIds = new uint8_t[13]{6,5,2,3,1,4,5,6,3,6,0,4,255}; 
+          currentCircuit = new Circuit(4,gatesIds);
+          break;
+        case 3: 
+          gatesIds = new uint8_t[12]{4,3,2,1,1,2,4,5,6,5,5,255}; 
+          currentCircuit = new Circuit(4,gatesIds);
+          break;
+        case 4: 
+          gatesIds = new uint8_t[16]{3,4,5,6,6,5,4,4,5,6,0,4,5,6,4,255}; 
+          currentCircuit = new Circuit(4,gatesIds);
+          break;
+        case 5: 
+          gatesIds = new uint8_t[16]{5,5,5,5,4,4,4,4,4,6,6,4,5,6,0,255}; 
+          currentCircuit = new Circuit(4,gatesIds);
+          break;
+      }
+      break;
+    case 8:      
+      switch (currentPhase) {
+        case 1: 
+          gatesIds = new uint8_t[34]{5,5,5,5,4,4,4,4,4,6,6,4,5,6,0,4,5,5,5,5,4,4,4,4,4,6,6,4,5,6,0,255}; 
+          currentCircuit = new Circuit(5,gatesIds);
           break;
       }
   }
@@ -288,6 +321,8 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
 }
 
 static void ScreenPointsGates::drawNextPhase(bool pClearSpaces){
+  nextEnabled = false;
+  drawNavigationButtons();
   EvtCtrl::clearTransitoryEvents();
   if (currentGate != nullptr) {
     delete currentGate;
@@ -302,6 +337,132 @@ static void ScreenPointsGates::drawNextPhase(bool pClearSpaces){
     drawGateLevel(pClearSpaces);
   } else { //circuits  
     drawCircuitLevel(pClearSpaces);
+  }
+  confirmEvent->enabled = true;
+}
+
+
+
+static void ScreenPointsGates::incPhase(){
+  if (currentPhase < 5) {
+    currentPhase++;
+  } else {
+    currentLevel ++;
+    currentPhase = 1;
+  }
+}
+
+static void ScreenPointsGates::drawResult(bool result, bool clearOnly) {
+  uint8_t halfSize = 18;
+  uint16_t centerX = TSCtrl::tft.width() - DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN * 2 - halfSize - 17;
+  uint16_t centerY = titleInfo.y + titleInfo.h + 62;
+  TSCtrl::tft.fillRect(centerX - halfSize - 2, centerY - halfSize - 2, halfSize*2 + 4, halfSize*2 + 4, DEFAULT_BACKGROUND_COLOR);
+  if (!clearOnly) {
+    if (result) {
+      // Desenha o símbolo de check verde
+      TSCtrl::tft.drawLine(centerX - halfSize, centerY, centerX - halfSize / 2, centerY + halfSize, TFT_GREEN);
+      TSCtrl::tft.drawLine(centerX - halfSize / 2, centerY + halfSize, centerX + halfSize, centerY - halfSize, TFT_GREEN);
+    } else {
+      // Desenha o símbolo de X vermelho
+      TSCtrl::tft.drawLine(centerX - halfSize, centerY - halfSize, centerX + halfSize, centerY + halfSize, TFT_RED);
+      TSCtrl::tft.drawLine(centerX + halfSize, centerY - halfSize, centerX - halfSize, centerY + halfSize, TFT_RED);
+    }
+  }
+}
+
+static void ScreenPointsGates::confirm(){
+  bool result = false;
+  confirmEvent->enabled = false;
+  if (currentGate != nullptr) {
+    setBit(currentGate->packedFlags,7,true);//7-visible output;
+    DrawCtrl::drawGateOutputButton(currentGate);
+    bool outputState = getBit(currentGate->packedInputs,7); 
+    if ((updateInitialState && outputState != initialState) || (
+      !updateInitialState && outputState
+    )) {
+      result = true;
+      currentPontuation++;
+      drawCurrentPontuation();
+    }
+  } else if (currentCircuit != nullptr) {
+    setBit(currentCircuit->gates[0]->packedFlags,7,true);//7-visible output;
+    DrawCtrl::drawGateOutputButton(currentCircuit->gates[0]);
+    bool outputState = getBit(currentCircuit->gates[0]->packedInputs,7); 
+    if ((updateInitialState && outputState != initialState) || (
+      !updateInitialState && outputState
+    )) {
+      result = true;
+      currentPontuation++;
+      drawCurrentPontuation();
+    }
+  }
+  drawResult(result);
+  //delay(DEFAULT_PHASE_TIME_INTERVAL);
+  
+  //incPhase();
+  //drawNextPhase();
+  nextEnabled = true;
+  drawNavigationButtons();
+}
+
+static void ScreenPointsGates::drawNavigationButtons(){
+  uint16_t color = TFT_YELLOW;
+  void* onClick = nullptr;
+
+  if (nextEnabled) {
+    if (nextEv == nullptr) {
+      onClick = []{
+        ScreenPointsGates::drawResult(false,true);
+        ScreenPointsGates::incPhase();
+        ScreenPointsGates::drawNextPhase();
+      };
+    } 
+  } else {
+    color = DEFAULT_BACKGROUND_COLOR;
+  };
+  if (nextEnabled && onClick != nullptr) {
+    Serial.println("creating next event");
+    nextEv = DrawCtrl::drawClickable(
+      onClick,
+      nullptr,
+      3,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 55,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + TSCtrl::tft.height() /2-20,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 55,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + TSCtrl::tft.height() /2+20,
+      0,
+      5,
+      color
+    );    
+    EvtCtrl::addScreenEvent(nextEv);
+  } else if (nextEnabled) {
+    Serial.println("drawing prev button");
+    double x2=0;
+    double y2=0;
+    double r1=0;
+    DrawCtrl::drawComponent(
+      3,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 55,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + TSCtrl::tft.height() /2-20,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 55,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + TSCtrl::tft.height() /2+20,
+      x2,
+      y2,
+      r1,
+      3,
+      color
+    );
+  } else {
+    TSCtrl::tft.fillRect(
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+ + TSCtrl::tft.width() - 60,
+      DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + TSCtrl::tft.height() /2-25,
+      45,
+      45,
+      color
+    );
+  };
+  if (nextEv != nullptr) {
+    nextEv->enabled = nextEnabled;
   }
 }
 
@@ -334,52 +495,4 @@ static void ScreenPointsGates::draw(TextInfo pTitleInfo, char* params[]) {
   drawCurrentPontuation();
 
   drawNextPhase(false);
-}
-
-static void ScreenPointsGates::incPhase(){
-  if (currentPhase < 5) {
-    currentPhase++;
-  } else {
-    currentLevel ++;
-    currentPhase = 1;
-  }
-}
-
-static void ScreenPointsGates::drawResult(bool result, bool clearOnly) {
-  uint8_t halfSize = 18;
-  uint16_t centerX = TSCtrl::tft.width() - DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN * 2 - halfSize - 17;
-  uint16_t centerY = titleInfo.y + titleInfo.h + 62;
-  TSCtrl::tft.fillRect(centerX - halfSize - 2, centerY - halfSize - 2, halfSize*2 + 4, halfSize*2 + 4, DEFAULT_BACKGROUND_COLOR);
-  if (!clearOnly) {
-    if (result) {
-      // Desenha o símbolo de check verde
-      TSCtrl::tft.drawLine(centerX - halfSize, centerY, centerX - halfSize / 2, centerY + halfSize, TFT_GREEN);
-      TSCtrl::tft.drawLine(centerX - halfSize / 2, centerY + halfSize, centerX + halfSize, centerY - halfSize, TFT_GREEN);
-    } else {
-      // Desenha o símbolo de X vermelho
-      TSCtrl::tft.drawLine(centerX - halfSize, centerY - halfSize, centerX + halfSize, centerY + halfSize, TFT_RED);
-      TSCtrl::tft.drawLine(centerX + halfSize, centerY - halfSize, centerX - halfSize, centerY + halfSize, TFT_RED);
-    }
-  }
-}
-
-static void ScreenPointsGates::confirm(){
-  bool result = false;
-  if (currentGate != nullptr) {
-    setBit(currentGate->packedFlags,7,true);//7-visible output;
-    DrawCtrl::drawGateOutputButton(currentGate);
-    bool outputState = getBit(currentGate->packedInputs,7); 
-    if ((updateInitialState && outputState != initialState) || (
-      !updateInitialState && outputState
-    )) {
-      result = true;
-      currentPontuation++;
-      drawCurrentPontuation();
-    }
-  }
-  drawResult(result);
-  delay(DEFAULT_PHASE_TIME_INTERVAL);
-  drawResult(false,true);
-  incPhase();
-  drawNextPhase();
 }

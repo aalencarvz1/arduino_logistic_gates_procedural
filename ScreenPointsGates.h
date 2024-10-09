@@ -9,6 +9,9 @@
 #define DEFAULT_PHASE_TIME_INTERVAL 200
 
 struct ScreenPointsGates {
+  static bool nextEnabled;
+  static ClickEvent* confirmEvent;
+  static ClickEvent* nextEv;
   static uint8_t currentLevel;
   static uint8_t currentPhase;
   static uint8_t currentPontuation;  
@@ -36,6 +39,7 @@ struct ScreenPointsGates {
   static void incPhase();
   static void drawResult(bool result, bool clearOnly = false);
   static void confirm();
+  static void drawNavigationButtons();
   
   //static void drawGate(const char* gateName);
   
