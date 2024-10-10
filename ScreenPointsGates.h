@@ -9,6 +9,7 @@
 #define DEFAULT_PHASE_TIME_INTERVAL 200
 
 struct ScreenPointsGates {
+  static uint8_t levelCount;
   static bool nextEnabled;
   static ClickEvent* confirmEvent;
   static ClickEvent* nextEv;

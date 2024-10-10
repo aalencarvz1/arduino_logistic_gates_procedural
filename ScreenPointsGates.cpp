@@ -6,7 +6,7 @@
 
 
 //STATIC INITIALIZATIONS
-
+static uint8_t ScreenPointsGates::levelCount = 7;
 static ClickEvent* ScreenPointsGates::confirmEvent = nullptr;
 static bool ScreenPointsGates::nextEnabled = false;
 static ClickEvent* ScreenPointsGates::nextEv = nullptr;
@@ -37,6 +37,22 @@ static void ScreenPointsGates::freeMemory() {
     delete currentCircuit;
     currentCircuit = nullptr;
   }
+  confirmEvent = nullptr;
+  nextEnabled = false;
+  nextEv = nullptr;
+  //currentLevel = 1;
+  currentPhase = 1;
+  currentPontuation = 0;
+  gateX = 0;
+  gateY = 0;
+  gateSize = 0;
+  gateWidth = 0;
+  currentGateName = GATES_NAMES[0];
+  currentGate = nullptr;
+  currentCircuit = nullptr;
+  initialState = false;
+  updateInitialState = false;
+  randomSeed(micros());
 }
 
 static void ScreenPointsGates::drawConfirmButton(){
@@ -119,6 +135,7 @@ static void ScreenPointsGates::clearAllSpaces(){
 }
 
 static void ScreenPointsGates::drawGateLevel(bool pClearGateSpace) {
+  randomSeed(micros());
   if (pClearGateSpace) {
     clearGateSapce();
   }
@@ -468,7 +485,7 @@ static void ScreenPointsGates::drawNavigationButtons(){
 
 static void ScreenPointsGates::draw(TextInfo pTitleInfo, char* params[]) {
   freeMemory();
-  randomSeed(analogRead(0));
+  //randomSeed(analogRead(0));
   titleInfo = pTitleInfo;
   if (params != nullptr && params[0] != nullptr) {
     currentGateName = params[0];
