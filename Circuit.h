@@ -6,7 +6,8 @@
 #define DEFAULT_GATE_VERTICAL_SIZE_PERC 0.5
 
 struct Circuit {
-  uint8_t gateLevelCount;
+  uint8_t gateLevelCount = 0;
+  uint8_t gateCount = 0;
   Gate** gates = nullptr;
   Circuit(
     uint8_t pGateLevelCount,
@@ -16,6 +17,7 @@ struct Circuit {
   Gate* getNextGateInputConnector(uint8_t& pOutputInpuIndex);
   Gate* createGate(
     uint8_t pGateId,
+    bool draw = true,
     int pX = 0,
     int pY = 0,
     double pSize = 0,

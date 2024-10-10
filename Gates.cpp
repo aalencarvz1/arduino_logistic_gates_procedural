@@ -132,7 +132,7 @@ bool calcOutputState(Gate* g) {
 * invert current state of input and recalculate gate output state (bit 8 of packed inputs)
 * redraw input clicked and output state if changed
 */
-void setGateInputState(Gate* gate,uint8_t inputIndex, bool newState) {
+void setGateInputState(Gate*& gate,uint8_t inputIndex, bool newState) {
   if (gate != nullptr) {
     bool currentInputState = getBit(gate->packedInputs,inputIndex);
     if (currentInputState != newState) {
@@ -175,20 +175,36 @@ void invertGateInput(Gate* gate,uint8_t inputIndex) {
   }
 }
 
-void addConnectedGate(Gate* originOutput,Gate* destinyGate,uint8_t destinyInputIndex) {    
-  Gate** newConnectedGates = new Gate*[originOutput->connectedGatesQty + 1];    
-  for (uint8_t i = 0; i < originOutput->connectedGatesQty; i++) {
-    newConnectedGates[i] = originOutput->connectedGates[i];
-  }
-  newConnectedGates[originOutput->connectedGatesQty] = destinyGate;
-  if (originOutput->connectedGates != nullptr) {
-    delete[] originOutput->connectedGates;
-  }
-  originOutput->connectedGates = newConnectedGates;
+void addGateToGateArray(Gate**& pGateArray, Gate*& pGate, uint8_t& currentCount) {
+  // Alocar um novo array com espaço adicional para o novo elemento
+  Gate** newGateArray = new Gate*[currentCount + 1];
   
+  // Copiar os elementos antigos para o novo array
+  for (uint8_t i = 0; i < currentCount; i++) {
+    newGateArray[i] = pGateArray[i];
+  }
   
-  uint8_t* newConnectedGatesInputs = new uint8_t[originOutput->connectedGatesQty + 1];    
-  for (uint8_t i = 0; i < originOutput->connectedGatesQty; i++) {
+  // Adicionar o novo gate no final do array
+  newGateArray[currentCount] = pGate;
+  
+  // Liberar a memória antiga se existir
+  if (pGateArray != nullptr) {
+    delete[] pGateArray;
+  }
+  
+  // Atualizar o ponteiro do array antigo para o novo
+  pGateArray = newGateArray;
+  
+  // Incrementar a contagem de gates
+  currentCount++;
+}
+
+
+void addConnectedGate(Gate*& originOutput,Gate*& destinyGate,uint8_t destinyInputIndex) {    
+  addGateToGateArray(originOutput->connectedGates,destinyGate,originOutput->connectedGatesQty);
+    
+  uint8_t* newConnectedGatesInputs = new uint8_t[originOutput->connectedGatesQty];    
+  for (uint8_t i = 0; i < originOutput->connectedGatesQty-1; i++) {
     newConnectedGatesInputs[i] = originOutput->connectedInputs[i];
   }
   uint8_t newDestinyInputIndexs = 0b00000000;
@@ -196,14 +212,14 @@ void addConnectedGate(Gate* originOutput,Gate* destinyGate,uint8_t destinyInputI
 
   setGateInputState(destinyGate,destinyInputIndex,calcOutputState(originOutput));
 
-  newConnectedGatesInputs[originOutput->connectedGatesQty] = newDestinyInputIndexs;
+  newConnectedGatesInputs[originOutput->connectedGatesQty-1] = newDestinyInputIndexs;
   if (originOutput->connectedInputs != nullptr) {
     delete[] originOutput->connectedInputs;
   }
   originOutput->connectedInputs = newConnectedGatesInputs;
 
 
-  originOutput->connectedGatesQty++;
+  //originOutput->connectedGatesQty++;
 
   FREERAM_PRINT;
 }
