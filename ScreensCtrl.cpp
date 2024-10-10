@@ -6,7 +6,7 @@
 #include "Gate.h"
 #include "ScreenTutorialGates.h"
 #include "ScreenPointsGates.h"
-
+#include "ScreenPoints.h"
 
 //STATIC INITIALIZATIONS
 StackArray <uint8_t> ScreensCtrl::stack;
@@ -114,7 +114,7 @@ static void ScreensCtrl::drawTutorialScreenOptions(TextInfo titleInfo) {
 }
 
 static void ScreensCtrl::drawPoitnsScreenOptions(TextInfo titleInfo) {
-  double pX = TSCtrl::tft.width() / 2;
+  /*double pX = TSCtrl::tft.width() / 2;
   pX = pX /2;
   double pY = TSCtrl::tft.height() / 2 - 10;
   double pR = pY;
@@ -133,10 +133,12 @@ static void ScreensCtrl::drawPoitnsScreenOptions(TextInfo titleInfo) {
     []{
       ScreensCtrl::goTo(30);
     }
-  );
+  );*/
+
+  ScreenPoints::draw(titleInfo);
 }
 
-static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
+static void ScreensCtrl::goTo(uint8_t screenId, char* params[], bool popCurrent) {
   Serial.println(F("INIT ScreensCtrl::goTo"));
 
   if (!stack.isEmpty()) {
@@ -144,11 +146,16 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
       case 20:
         ScreenTutorialGates::freeMemory();
         break;
+      case 3:
+        ScreenPoints::freeMemory();
       case 30:
         ScreenPointsGates::freeMemory();
         break;
-    }
+    };
+
   } 
+
+
 
   Serial.println("screenId "+String(screenId));
   EvtCtrl::clearAllEvents();
@@ -236,6 +243,9 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[]) {
 
   //stack update
   if (!stack.isEmpty()) {
+    if (popCurrent) {
+      stack.pop();
+    }
     if (stack.peek() != screenId) {
       stack.push(screenId);
     }
