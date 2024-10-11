@@ -114,28 +114,7 @@ static void ScreensCtrl::drawTutorialScreenOptions(TextInfo titleInfo) {
   drawGateButton(pX,pY,pR,col+3,lin,hSpace,TFT_PURPLE,GATES_NAMES[6]);
 }
 
-static void ScreensCtrl::drawPoitnsScreenOptions(TextInfo titleInfo) {
-  /*double pX = TSCtrl::tft.width() / 2;
-  pX = pX /2;
-  double pY = TSCtrl::tft.height() / 2 - 10;
-  double pR = pY;
-  if (pY > pX) {
-    pR = pX;
-  }
-  pR = pR * 0.4;
-
-  DrawCtrl::drawOption(
-    pX,
-    pY,
-    pR,
-    Colors::BLUE,
-    true,
-    "Jogar",
-    []{
-      ScreensCtrl::goTo(30);
-    }
-  );*/
-
+static void ScreensCtrl::drawPoitnsScreenOptions(TextInfo titleInfo) {  
   ScreenPoints::draw(titleInfo);
 }
 

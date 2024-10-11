@@ -42,6 +42,7 @@ struct ScreenPointsGates {
   static void drawResult(bool result, bool clearOnly = false);
   static void confirm();
   static void drawNavigationButtons();
+  static void drawEndGame();
   
   //static void drawGate(const char* gateName);
   

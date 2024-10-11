@@ -320,14 +320,9 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
           break;
       }
       break;
-    case 8: 
-      updateInitialState = true;
-      switch (currentPhase) {
-        case 1: 
-          gatesIds = new uint8_t[34]{5,5,5,5,4,4,4,4,4,6,6,4,5,6,0,4,5,5,5,5,4,4,4,4,4,6,6,4,5,6,0,255}; 
-          currentCircuit = new Circuit(5,gatesIds);          
-          break;
-      }
+    default:
+      drawEndGame();
+      break;
   }
   if (gatesIds != nullptr) {
     delete[] gatesIds;
@@ -510,4 +505,36 @@ static void ScreenPointsGates::draw(TextInfo pTitleInfo, char* params[]) {
   drawCurrentPontuation();
 
   drawNextPhase(false);
+}
+
+static void ScreenPointsGates::drawEndGame() {
+  TSCtrl::tft.fillRect(
+    TSCtrl::tft.width()-DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN-121,
+    0,
+    121,
+    26,
+    DEFAULT_BACKGROUND_COLOR
+  );
+
+  TSCtrl::tft.fillRoundRect(
+    DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_WIDTH,
+    DEFAULT_WINDOW_CONTAINER_Y,
+    TSCtrl::tft.width()-DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN*2-DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_WIDTH*2,
+    DEFAULT_WINDOW_CONTAINER_H,
+    DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_RADIUS,
+    DEFAULT_BACKGROUND_COLOR
+  );
+
+  DrawCtrl::drawCenteredText("Sua pontuacao final foi",DEFAULT_WINDOW_CONTAINER_Y+35);
+
+  TSCtrl::tft.fillCircle(TSCtrl::tft.width() / 2, TSCtrl::tft.height() / 2 + 20, TSCtrl::tft.height() * 0.2, TFT_RED);
+  TSCtrl::tft.drawCircle(TSCtrl::tft.width() / 2, TSCtrl::tft.height() / 2 + 20, TSCtrl::tft.height() * 0.25, TFT_RED);
+  TSCtrl::tft.setCursor(TSCtrl::tft.width() / 2-(currentPontuation>9?20:10), TSCtrl::tft.height() / 2 + 2);
+  TSCtrl::tft.setTextSize(4);
+  TSCtrl::tft.setTextColor(DEFAULT_TEXT_COLOR);
+  Serial.println("current Pontuation: "+String(currentPontuation));
+  TSCtrl::tft.print(currentPontuation);
+
+
+
 }
