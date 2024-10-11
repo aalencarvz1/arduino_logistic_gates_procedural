@@ -11,7 +11,7 @@ struct Circuit {
   Gate** gates = nullptr;
   Circuit(
     uint8_t pGateLevelCount,
-    uint8_t pGateIds[] = nullptr
+    uint8_t* pGateIds = nullptr
   );
   ~Circuit();
   Gate* getNextGateInputConnector(uint8_t& pOutputInpuIndex);
@@ -25,7 +25,7 @@ struct Circuit {
     Gate* pOutputGate = nullptr,
     uint8_t pOutputInpuIndex = 255
   );
-  void createGates(uint8_t pGateIds[]);
+  void createGates(uint8_t* pGateIds);
 };
 
 #endif //CIRCUIT_H

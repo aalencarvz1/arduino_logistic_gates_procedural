@@ -32,4 +32,5 @@ void setBit(uint8_t &byte, int position, bool value);
 bool getBit(uint8_t byte, int position);
 void setBit(uint16_t &byte, int position, bool value);
 bool getBit(uint16_t byte, int position);
+uint8_t getRandomic(uint8_t min = 0, uint8_t max = 255, uint8_t invalid = 255);
 #endif // UTILS_H

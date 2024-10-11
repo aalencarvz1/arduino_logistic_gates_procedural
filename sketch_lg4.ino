@@ -11,7 +11,7 @@
 void setup() {
   Serial.begin(9600);
   TSCtrl::init(); 
-  randomSeed(micros());
+  randomSeed(analogRead(A0) + micros());
   ScreensCtrl::goTo(1);
   
   /*

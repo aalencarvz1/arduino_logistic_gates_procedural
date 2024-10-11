@@ -5,7 +5,7 @@
 
 Circuit::Circuit(
   uint8_t pGateLevelCount,
-  uint8_t pGateIds[]
+  uint8_t* pGateIds
 ) : 
   gateLevelCount(pGateLevelCount)
 {
@@ -16,11 +16,13 @@ Circuit::Circuit(
 
 Circuit::~Circuit(){
   if (gates != nullptr) {
-    for(uint8_t i = 0; i < gateLevelCount; i++) {
+    for(uint8_t i = 0; i < gateCount; i++) {
       delete gates[i];
+      gates[i] = nullptr;
     }
     delete[] gates;
     gates = nullptr;
+    gateCount = 0;
   }
 }
 
@@ -34,9 +36,9 @@ Gate* Circuit::getNextGateInputConnector(uint8_t& pOutputInpuIndex) {
     for (uint8_t i = 0; i < gateCount; i++) {
       if (gates[i] != nullptr) {
         for (uint8_t j = 0 ; j < gates[i]->inputCount; j++) {
-          Serial.println("xxxxx searching in gate " + String(i) + ", inputIndex "+String(j));
+          //Serial.println("xxxxx searching in gate " + String(i) + ", inputIndex "+String(j));
           if (!getBit(gates[i]->packedInputsWithOtputs,j)) {
-            Serial.println("  found ");
+            //Serial.println("  found ");
             pOutputInpuIndex = j;
             result = gates[i];
             break;
@@ -59,7 +61,7 @@ Gate* Circuit::createGate(
   Gate* pOutputGate,
   uint8_t pOutputInpuIndex
 ) {
-  Serial.println(F("INIT Circuit::createGate"));
+  //Serial.println(F("INIT Circuit::createGate"));
   Gate* g = nullptr;
   uint8_t currentCircuitLevel = 0;
 
@@ -69,7 +71,7 @@ Gate* Circuit::createGate(
     getNextGateInputConnector(pOutputInpuIndex);
   }  
 
-  Serial.println("has gate output "+boolToString(pOutputGate != nullptr) + "," + String(pOutputInpuIndex));
+  //Serial.println("has gate output "+boolToString(pOutputGate != nullptr) + "," + String(pOutputInpuIndex));
 
   if (pOutputGate != nullptr) {
     setBit(pOutputGate->packedInputsWithOtputs,pOutputInpuIndex,true);
@@ -90,7 +92,7 @@ Gate* Circuit::createGate(
   }
 
   double currentGateSapce = lastLevelWidth / pow(2,currentCircuitLevel);
-  Serial.println("lastLevelWidth "+String(lastLevelWidth) + ", currentGateSapce " + String(currentGateSapce));
+  //Serial.println("lastLevelWidth "+String(lastLevelWidth) + ", currentGateSapce " + String(currentGateSapce));
 
   if (pX == 0) {
     if (gates == nullptr || gates[0] == nullptr) {
@@ -111,7 +113,7 @@ Gate* Circuit::createGate(
     }
   }
 
-  Serial.println(String(pX)+","+String(pY)+","+String(pSize)+ "," + String(pWidth));
+  //Serial.println(String(pX)+","+String(pY)+","+String(pSize)+ "," + String(pWidth));
 
   g = new Gate(
     pGateId,
@@ -134,21 +136,20 @@ Gate* Circuit::createGate(
   }
 
   addGateToGateArray(gates,g,gateCount);
-  Serial.println("yyyyyyyyyyyyyyyy"+String(gateCount));
   if (draw) {
     DrawCtrl::drawGate(g);
   }
-  Serial.println(F("END Circuit::createGate"));
+  //Serial.println(F("END Circuit::createGate"));
   return g;
 }
 
-void Circuit::createGates(uint8_t pGateIds[]) {
+void Circuit::createGates(uint8_t* pGateIds) {
   //Serial.println(F("INIT GatesCircuit::createGates"));
   if (pGateIds != nullptr) {
     Gate* g = nullptr;
     uint8_t i = 0;
     while(pGateIds[i] != 255) {
-      Serial.println("creating " + String(i) + " " + String(pGateIds[i]));
+      //Serial.println("creating " + String(i) + " " + String(pGateIds[i]));
       if (pGateIds[i] == 255) break;
       g = createGate(pGateIds[i]);
       /*if (g != nullptr) {

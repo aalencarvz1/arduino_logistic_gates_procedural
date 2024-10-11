@@ -12,6 +12,7 @@ static bool ScreenPointsGates::nextEnabled = false;
 static ClickEvent* ScreenPointsGates::nextEv = nullptr;
 static uint8_t ScreenPointsGates::currentLevel = 1;
 static uint8_t ScreenPointsGates::currentPhase = 1;
+static uint8_t ScreenPointsGates::currentGateIndex = 255;
 static uint8_t ScreenPointsGates::currentPontuation = 0;
 static double ScreenPointsGates::gateX = 0;
 static double ScreenPointsGates::gateY = 0;
@@ -52,7 +53,6 @@ static void ScreenPointsGates::freeMemory() {
   currentCircuit = nullptr;
   initialState = false;
   updateInitialState = false;
-  randomSeed(micros());
 }
 
 static void ScreenPointsGates::drawConfirmButton(){
@@ -135,44 +135,47 @@ static void ScreenPointsGates::clearAllSpaces(){
 }
 
 static void ScreenPointsGates::drawGateLevel(bool pClearGateSpace) {
-  randomSeed(micros());
   if (pClearGateSpace) {
     clearGateSapce();
   }
   if (currentLevel <= 4) { 
-    uint8_t idGateName = 0;
     uint8_t connectorCount = 2;
     gateSize = TSCtrl::tft.height() * 0.4;
     gateWidth = gateSize;    
     gateY = TSCtrl::tft.height() / 2 + gateSize/2 + titleInfo.h;    
     if (currentLevel == 1) {
-      idGateName = random(0,3);
+      currentGateIndex = getRandomic(0,3,currentGateIndex);
     } else if (currentLevel == 2) {
-      idGateName = random(3,GATES_NAMES_COUNT);
+      currentGateIndex = getRandomic(3,GATES_NAMES_COUNT,currentGateIndex);
     } else if (currentLevel > 2) {
-      idGateName = 2;
-      while (idGateName == 2) { //2 = not
-        idGateName = random(0,GATES_NAMES_COUNT);
+      currentGateIndex = 2;
+      while (currentGateIndex == 2) { //2 = not
+        currentGateIndex = getRandomic(0,GATES_NAMES_COUNT,currentGateIndex);
       }     
     }     
     if (currentLevel == 3) {
-      connectorCount = random(3,5);
+      connectorCount = getRandomic(3,5);
       gateWidth = gateWidth * 1.3;
+
       TSCtrl::tft.fillRect(subTitleInfo.x-10,subTitleInfo.y-8,subTitleInfo.w+10,subTitleInfo.h+4, DEFAULT_BACKGROUND_COLOR);
       subTitleInfo = DrawCtrl::drawCenteredText("Mude o estado inicial",titleInfo.y + titleInfo.h +10);
       updateInitialState = true;
-    } else if (currentLevel > 3) {
-      connectorCount = random(4,7);
+    } else if (currentLevel > 3) {      
+      TSCtrl::tft.fillRect(subTitleInfo.x-10,subTitleInfo.y-8,subTitleInfo.w+10,subTitleInfo.h+4, DEFAULT_BACKGROUND_COLOR);
+      subTitleInfo = DrawCtrl::drawCenteredText("Mude o estado inicial",titleInfo.y + titleInfo.h +10);
+      updateInitialState = true;
+      connectorCount = getRandomic(4,7);
       gateWidth = gateWidth * 1.4;
     } else {
       subTitleInfo = DrawCtrl::drawCenteredText("Ative a porta",titleInfo.y + titleInfo.h +10);
+      updateInitialState = false;
     }
 
     gateX = TSCtrl::tft.width()/2-gateWidth/2;
 
     
     currentGate = new Gate(
-      idGateName,
+      currentGateIndex,
       gateX,
       gateY,
       gateSize,
@@ -183,7 +186,7 @@ static void ScreenPointsGates::drawGateLevel(bool pClearGateSpace) {
     setBit(currentGate->packedFlags,7,false);//7-visible output
     DrawCtrl::drawGate(currentGate);
     if (currentLevel < 3) {
-      DrawCtrl::drawCenteredText(GATES_NAMES[idGateName],currentGate->y-currentGate->h/2);
+      DrawCtrl::drawCenteredText(GATES_NAMES[currentGateIndex],currentGate->y-currentGate->h/2);
     }
     initialState = getBit(currentGate->packedInputs,7); //7-outputState
   }
@@ -197,25 +200,19 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
       updateInitialState = false;
       switch (currentPhase) {
         case 1:
-          gatesIds = new uint8_t[4]{0,2,7,255}; 
+          gatesIds = new uint8_t[4]{getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT),7,255}; 
           TSCtrl::tft.fillRect(subTitleInfo.x-10,subTitleInfo.y-8,subTitleInfo.w+10,subTitleInfo.h+4, DEFAULT_BACKGROUND_COLOR);
           subTitleInfo = DrawCtrl::drawCenteredText("Ative o circuito",titleInfo.y + titleInfo.h +10);            
           currentCircuit = new Circuit(2,gatesIds);
           break;
         case 2:
-          gatesIds = new uint8_t[3]{2,0,255}; 
+          gatesIds = new uint8_t[3]{2,getRandomic(0,GATES_NAMES_COUNT),255}; 
           currentCircuit = new Circuit(2,gatesIds);
           break;
         case 3:
-          gatesIds = new uint8_t[4]{1,0,2,255}; 
-          currentCircuit = new Circuit(2,gatesIds);
-          break;
         case 4:
-          gatesIds = new uint8_t[4]{0,0,5,255}; 
-          currentCircuit = new Circuit(2,gatesIds);
-          break;
         case 5:
-          gatesIds = new uint8_t[4]{0,0,1,255}; 
+          gatesIds = new uint8_t[4]{getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT),getRandomic(0,GATES_NAMES_COUNT),255}; 
           currentCircuit = new Circuit(2,gatesIds);
           break;
       }
@@ -227,9 +224,8 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
         case 1: 
           TSCtrl::tft.fillRect(subTitleInfo.x-10,subTitleInfo.y-8,subTitleInfo.w+10,subTitleInfo.h+4, DEFAULT_BACKGROUND_COLOR);
           subTitleInfo = DrawCtrl::drawCenteredText("Mude o estado inicial",titleInfo.y + titleInfo.h +10);
-          gatesIds = new uint8_t[5]{0,0,5,7,255}; 
+          gatesIds = new uint8_t[5]{getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),7,255}; 
           currentCircuit = new Circuit(3,gatesIds);
-
           g0 = currentCircuit->gates[currentCircuit->gateCount-1];
           g1 = currentCircuit->gates[currentCircuit->gateCount-2];
           g2 = currentCircuit->gates[currentCircuit->gateCount-3];
@@ -248,9 +244,8 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
           currentCircuit->createGate(7,true,0,0,0,0,g1,1);
           break;
         case 2: 
-          gatesIds = new uint8_t[5]{0,0,1,7,255}; 
+          gatesIds = new uint8_t[5]{getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),7,255}; 
           currentCircuit = new Circuit(3,gatesIds);
-
           g0 = currentCircuit->gates[currentCircuit->gateCount-1];
           g1 = currentCircuit->gates[currentCircuit->gateCount-2];
           g2 = currentCircuit->gates[currentCircuit->gateCount-3];
@@ -269,13 +264,12 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
           currentCircuit->createGate(7,true,0,0,0,0,g1,1);
           break;
         case 3: 
-          gatesIds = new uint8_t[4]{1,3,0,255}; 
+          gatesIds = new uint8_t[4]{getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),255}; 
           currentCircuit = new Circuit(2,gatesIds);
           break;
         case 4: 
-          gatesIds = new uint8_t[5]{1,3,1,7,255}; 
+          gatesIds = new uint8_t[5]{getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),7,255}; 
           currentCircuit = new Circuit(3,gatesIds);
-
           g0 = currentCircuit->gates[currentCircuit->gateCount-1];
           g1 = currentCircuit->gates[currentCircuit->gateCount-2];
           g2 = currentCircuit->gates[currentCircuit->gateCount-3];
@@ -300,11 +294,12 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
       }
       break;
     case 7:      
+      updateInitialState = true;
       switch (currentPhase) {
         case 1: 
           TSCtrl::tft.fillRect(subTitleInfo.x-10,subTitleInfo.y-8,subTitleInfo.w+10,subTitleInfo.h+4, DEFAULT_BACKGROUND_COLOR);
           subTitleInfo = DrawCtrl::drawCenteredText("Mude o estado inicial",titleInfo.y + titleInfo.h +10);
-          gatesIds = new uint8_t[14]{1,0,0,2,5,4,2,3,2,6,3,1,6,255}; 
+          gatesIds = new uint8_t[14]{getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),2,getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),2,getRandomic(0,GATES_NAMES_COUNT,2),2,getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),getRandomic(0,GATES_NAMES_COUNT,2),255}; 
           currentCircuit = new Circuit(4,gatesIds);
           break;
         case 2: 
@@ -325,15 +320,19 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
           break;
       }
       break;
-    case 8:      
+    case 8: 
+      updateInitialState = true;
       switch (currentPhase) {
         case 1: 
           gatesIds = new uint8_t[34]{5,5,5,5,4,4,4,4,4,6,6,4,5,6,0,4,5,5,5,5,4,4,4,4,4,6,6,4,5,6,0,255}; 
-          currentCircuit = new Circuit(5,gatesIds);
+          currentCircuit = new Circuit(5,gatesIds);          
           break;
       }
   }
-  
+  if (gatesIds != nullptr) {
+    delete[] gatesIds;
+    gatesIds = nullptr;
+  }
 
 }
 
@@ -438,7 +437,7 @@ static void ScreenPointsGates::drawNavigationButtons(){
     color = DEFAULT_BACKGROUND_COLOR;
   };
   if (nextEnabled && onClick != nullptr) {
-    Serial.println("creating next event");
+    //Serial.println("creating next event");
     nextEv = DrawCtrl::drawClickable(
       onClick,
       nullptr,
@@ -453,7 +452,7 @@ static void ScreenPointsGates::drawNavigationButtons(){
     );    
     EvtCtrl::addScreenEvent(nextEv);
   } else if (nextEnabled) {
-    Serial.println("drawing prev button");
+    //Serial.println("drawing prev button");
     double x2=0;
     double y2=0;
     double r1=0;
@@ -485,7 +484,6 @@ static void ScreenPointsGates::drawNavigationButtons(){
 
 static void ScreenPointsGates::draw(TextInfo pTitleInfo, char* params[]) {
   freeMemory();
-  //randomSeed(analogRead(0));
   titleInfo = pTitleInfo;
   if (params != nullptr && params[0] != nullptr) {
     currentGateName = params[0];

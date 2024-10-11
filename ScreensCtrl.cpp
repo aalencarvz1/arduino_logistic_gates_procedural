@@ -1,4 +1,5 @@
 #include "ScreensCtrl.h"
+#include <MemoryUsage.h>
 #include "TSCtrl.h"
 #include "EvtCtrl.h"
 #include "Colors.h"
@@ -139,25 +140,15 @@ static void ScreensCtrl::drawPoitnsScreenOptions(TextInfo titleInfo) {
 }
 
 static void ScreensCtrl::goTo(uint8_t screenId, char* params[], bool popCurrent) {
-  Serial.println(F("INIT ScreensCtrl::goTo"));
+  //Serial.println(F("INIT ScreensCtrl::goTo"));
 
   if (!stack.isEmpty()) {
-    switch(stack.peek()) {
-      case 20:
-        ScreenTutorialGates::freeMemory();
-        break;
-      case 3:
-        ScreenPoints::freeMemory();
-      case 30:
-        ScreenPointsGates::freeMemory();
-        break;
-    };
-
+    destroy(stack.peek());
   } 
 
 
 
-  Serial.println("screenId "+String(screenId));
+  //Serial.println("screenId "+String(screenId));
   EvtCtrl::clearAllEvents();
   TSCtrl::tft.fillScreen(DEFAULT_BACKGROUND_COLOR);
   char* title = nullptr;
@@ -252,11 +243,25 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[], bool popCurrent)
   } else {
     stack.push(screenId);
   }
-  Serial.println(F("END ScreensCtrl::goTo"));
+  FREERAM_PRINT;
+  //Serial.println(F("END ScreensCtrl::goTo"));
+}
+
+static void ScreensCtrl::destroy(uint8_t screenId) {
+   switch(screenId) {
+    case 20:
+      ScreenTutorialGates::freeMemory();
+      break;
+    case 3:
+      ScreenPoints::freeMemory();
+    case 30:
+      ScreenPointsGates::freeMemory();
+      break;
+  };
 }
 
 //navigate to previous screen on stack
 static void ScreensCtrl::goBack() { 
-  stack.pop();
+  destroy(stack.pop());
   ScreensCtrl::goTo(stack.peek());
 }

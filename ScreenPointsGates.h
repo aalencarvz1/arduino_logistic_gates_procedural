@@ -15,6 +15,7 @@ struct ScreenPointsGates {
   static ClickEvent* nextEv;
   static uint8_t currentLevel;
   static uint8_t currentPhase;
+  static uint8_t currentGateIndex;
   static uint8_t currentPontuation;  
   static double gateX;
   static double gateY;
