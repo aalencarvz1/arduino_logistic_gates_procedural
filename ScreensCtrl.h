@@ -19,8 +19,8 @@ struct ScreensCtrl{
   );
   static void drawHomeScreenOptions(TextInfo titleInfo);
   static void drawTutorialScreenOptions(TextInfo titleInfo);
-  static void drawPoitnsScreenOptions(TextInfo titleInfo);
   static void goTo(uint8_t screenId, char* params[] = nullptr,bool popCurrent = false);
+  static void destroy(uint8_t screenId);  
   static void goBack();
 };
 

@@ -1,33 +1,40 @@
-#include "ScreenPointsGates.h"
+#include "ScreenTimeGates.h"
 #include "Gates.h"
 #include "DrawCtrl.h"
 #include "EvtCtrl.h"
 #include "Colors.h"
+#include <stdint.h>
+#include <Arduino.h>
 
 
 //STATIC INITIALIZATIONS
-static uint8_t ScreenPointsGates::levelCount = 7;
-static ClickEvent* ScreenPointsGates::confirmEvent = nullptr;
-static bool ScreenPointsGates::nextEnabled = false;
-static ClickEvent* ScreenPointsGates::nextEv = nullptr;
-static uint8_t ScreenPointsGates::currentLevel = 1;
-static uint8_t ScreenPointsGates::currentPhase = 1;
-static uint8_t ScreenPointsGates::currentGateIndex = 255;
-static uint8_t ScreenPointsGates::currentPontuation = 0;
-static double ScreenPointsGates::gateX = 0;
-static double ScreenPointsGates::gateY = 0;
-static double ScreenPointsGates::gateSize = 0;
-static double ScreenPointsGates::gateWidth = 0;
-static char* ScreenPointsGates::currentGateName = GATES_NAMES[0];
-static Gate* ScreenPointsGates::currentGate = nullptr;
-static Circuit* ScreenPointsGates::currentCircuit = nullptr;
-static TextInfo ScreenPointsGates::titleInfo;
-static TextInfo ScreenPointsGates::subTitleInfo;
-static bool ScreenPointsGates::initialState = false;
-static bool ScreenPointsGates::updateInitialState = false;
+static uint8_t ScreenTimeGates::levelCount = 7;
+static ClickEvent* ScreenTimeGates::confirmEvent = nullptr;
+static bool ScreenTimeGates::nextEnabled = false;
+static ClickEvent* ScreenTimeGates::nextEv = nullptr;
+static uint8_t ScreenTimeGates::currentLevel = 1;
+static uint8_t ScreenTimeGates::currentPhase = 1;
+static uint8_t ScreenTimeGates::currentGateIndex = 255;
+static uint8_t ScreenTimeGates::currentPontuation = 0;
+static double ScreenTimeGates::gateX = 0;
+static double ScreenTimeGates::gateY = 0;
+static double ScreenTimeGates::gateSize = 0;
+static double ScreenTimeGates::gateWidth = 0;
+static char* ScreenTimeGates::currentGateName = GATES_NAMES[0];
+static Gate* ScreenTimeGates::currentGate = nullptr;
+static Circuit* ScreenTimeGates::currentCircuit = nullptr;
+static TextInfo ScreenTimeGates::titleInfo;
+static TextInfo ScreenTimeGates::subTitleInfo;
+static bool ScreenTimeGates::initialState = false;
+static bool ScreenTimeGates::updateInitialState = false;
+
+static unsigned long ScreenTimeGates::previousMillis = 0;
+static unsigned long ScreenTimeGates::initialTime = 0;
+static unsigned long ScreenTimeGates::currentTime = 0;
+static unsigned long ScreenTimeGates::interval = 1000;
 
 
-static void ScreenPointsGates::freeMemory() {
+static void ScreenTimeGates::freeMemory() {
   currentPontuation = 0;
   currentGateName = GATES_NAMES[0];
   if (currentGate != nullptr) {
@@ -53,12 +60,19 @@ static void ScreenPointsGates::freeMemory() {
   currentCircuit = nullptr;
   initialState = false;
   updateInitialState = false;
+  if (EvtCtrl::onTime != nullptr) {
+    delete EvtCtrl::onTime;
+    EvtCtrl::onTime = nullptr;
+  }
+  previousMillis = millis();
+  //currentTime = 10000;
+  interval = 1000;
 }
 
-static void ScreenPointsGates::drawConfirmButton(){
+static void ScreenTimeGates::drawConfirmButton(){
   confirmEvent = DrawCtrl::drawClickable(
     []{
-      ScreenPointsGates::confirm();
+      ScreenTimeGates::confirm();
     },
     nullptr,
     1,
@@ -75,16 +89,32 @@ static void ScreenPointsGates::drawConfirmButton(){
   EvtCtrl::addScreenEvent(confirmEvent);
 }
 
-static void ScreenPointsGates::drawCurrentPontuation(){
-  //Serial.println(F("INIT ScreenPoints1::drawCurrentPontuation"));
-  TSCtrl::tft.fillRect(TSCtrl::tft.width() - DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN - 80, titleInfo.y + titleInfo.h + DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + 17,79,19,DEFAULT_BACKGROUND_COLOR);
-  char buffer[10]; // Array de char para armazenar o resultado
-  itoa(currentPontuation, buffer, 10);
-  DrawCtrl::drawCenteredText(buffer,titleInfo.y + titleInfo.h + DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + 25,TSCtrl::tft.width() - DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN - 80 / 2,2,TFT_CYAN);
-  //Serial.println(F("END ScreenPoints1::drawCurrentPontuation"));
+static void ScreenTimeGates::drawTime(){
+  //Serial.println(F("INIT ScreenPoints1::drawTime"));
+  Serial.println(String(millis())+","+String(previousMillis)+","+String(currentTime));
+  if (millis() - previousMillis >= interval) {    
+
+    currentTime = currentTime - interval;
+    previousMillis = millis();  
+
+    TSCtrl::tft.fillRect(TSCtrl::tft.width() - DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN - 80, titleInfo.y + titleInfo.h + DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + 17,79,19,DEFAULT_BACKGROUND_COLOR);
+    char timeString[5]; // Array de char para armazenar o resultado
+    uint8_t minutes = (currentTime / 1000) / 60;
+    uint8_t seconds = (currentTime / 1000) % 60; 
+    
+    sprintf(timeString, "%02d:%02d", minutes, seconds);
+    DrawCtrl::drawCenteredText(timeString,titleInfo.y + titleInfo.h + DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + 25,TSCtrl::tft.width() - DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN - 80 / 2,2,TFT_CYAN);
+    if (minutes <= 0 && seconds <= 0) {
+      delete EvtCtrl::onTime;
+      EvtCtrl::onTime = nullptr;
+      drawEndGame();
+    }
+  }
+  
+  //Serial.println(F("END ScreenPoints1::drawTime"));
 }
 
-static void ScreenPointsGates::drawLevelAndPhase() {
+static void ScreenTimeGates::drawLevelAndPhase() {
   TSCtrl::tft.fillRect(
     DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+5 + 70, 
     titleInfo.y + titleInfo.h+5,
@@ -103,7 +133,7 @@ static void ScreenPointsGates::drawLevelAndPhase() {
   TSCtrl::tft.print(currentPhase);
 }
 
-static void ScreenPointsGates::clearGateSapce(){
+static void ScreenTimeGates::clearGateSapce(){
   //clear gate space
   double gateSize = TSCtrl::tft.height() * 0.4;
   TSCtrl::tft.fillRect(
@@ -115,7 +145,7 @@ static void ScreenPointsGates::clearGateSapce(){
   );
 }
 
-static void ScreenPointsGates::clearAllSpaces(){
+static void ScreenTimeGates::clearAllSpaces(){
   //clear spaces
   TSCtrl::tft.fillRoundRect(
     DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN+DEFAULT_WINDOW_CONTENT_CONTAINER_BORDER_WIDTH,
@@ -134,7 +164,7 @@ static void ScreenPointsGates::clearAllSpaces(){
   );
 }
 
-static void ScreenPointsGates::drawGateLevel(bool pClearGateSpace) {
+static void ScreenTimeGates::drawGateLevel(bool pClearGateSpace) {
   if (pClearGateSpace) {
     clearGateSapce();
   }
@@ -165,7 +195,7 @@ static void ScreenPointsGates::drawGateLevel(bool pClearGateSpace) {
       subTitleInfo = DrawCtrl::drawCenteredText("Mude o estado inicial",titleInfo.y + titleInfo.h +10);
       updateInitialState = true;
       connectorCount = getRandomic(4,7);
-      gateWidth = gateWidth * 1.4;
+      gateWidth = gateWidth * 1.5;
     } else {
       subTitleInfo = DrawCtrl::drawCenteredText("Ative a porta",titleInfo.y + titleInfo.h +10);
       updateInitialState = false;
@@ -192,7 +222,7 @@ static void ScreenPointsGates::drawGateLevel(bool pClearGateSpace) {
   }
 }
 
-static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
+static void ScreenTimeGates::drawCircuitLevel(bool pClearSpaces) {
   clearAllSpaces();
   uint8_t* gatesIds = nullptr;  
   switch (currentLevel) {
@@ -374,7 +404,7 @@ static void ScreenPointsGates::drawCircuitLevel(bool pClearSpaces) {
   }
 }
 
-static void ScreenPointsGates::drawNextPhase(bool pClearSpaces){
+static void ScreenTimeGates::drawNextPhase(bool pClearSpaces){
   nextEnabled = false;
   drawNavigationButtons();
   EvtCtrl::clearTransitoryEvents();
@@ -397,7 +427,7 @@ static void ScreenPointsGates::drawNextPhase(bool pClearSpaces){
 
 
 
-static void ScreenPointsGates::incPhase(){
+static void ScreenTimeGates::incPhase(){
   if (currentPhase < 5) {
     currentPhase++;
   } else {
@@ -406,7 +436,7 @@ static void ScreenPointsGates::incPhase(){
   }
 }
 
-static void ScreenPointsGates::drawResult(bool result, bool clearOnly) {
+static void ScreenTimeGates::drawResult(bool result, bool clearOnly) {
   uint8_t halfSize = 18;
   uint16_t centerX = TSCtrl::tft.width() - DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN * 2 - halfSize - 17;
   uint16_t centerY = titleInfo.y + titleInfo.h + 62;
@@ -424,57 +454,48 @@ static void ScreenPointsGates::drawResult(bool result, bool clearOnly) {
   }
 }
 
-static void ScreenPointsGates::confirm(){
+static void ScreenTimeGates::confirm(){
   bool result = false;
   confirmEvent->enabled = false;
   if (currentGate != nullptr) {
-    setBit(currentGate->packedFlags,7,true);//7-visible output;
-    DrawCtrl::drawGateOutputButton(currentGate);
     bool outputState = getBit(currentGate->packedInputs,7); 
     if ((updateInitialState && outputState != initialState) || (
       !updateInitialState && outputState
     )) {
       result = true;
       currentPontuation++;
-      drawCurrentPontuation();
-    }
+      setBit(currentGate->packedFlags,7,true);//7-visible output;
+      DrawCtrl::drawGateOutputButton(currentGate);
+    }            
   } else if (currentCircuit != nullptr) {
-    //setBit(currentCircuit->gates[0]->packedFlags,7,true);//7-visible output;
-
-    for(uint8_t i = 0; i < currentCircuit->gateCount; i++) {
-      setBit(currentCircuit->gates[i]->packedFlags,7,true);//7-visible output;
-      DrawCtrl::drawGateOutputButton(currentCircuit->gates[i]);
-    }
-
-    //DrawCtrl::drawGateOutputButton(currentCircuit->gates[0]);
     bool outputState = getBit(currentCircuit->gates[0]->packedInputs,7); 
     if ((updateInitialState && outputState != initialState) || (
       !updateInitialState && outputState
     )) {
       result = true;
       currentPontuation++;
-      drawCurrentPontuation();
+      for(uint8_t i = 0; i < currentCircuit->gateCount; i++) {
+        setBit(currentCircuit->gates[i]->packedFlags,7,true);//7-visible output;
+        DrawCtrl::drawGateOutputButton(currentCircuit->gates[i]);
+      }
     }
   }
   drawResult(result);
-  //delay(DEFAULT_PHASE_TIME_INTERVAL);
-  
-  //incPhase();
-  //drawNextPhase();
-  nextEnabled = true;
+  nextEnabled = result;
+  confirmEvent->enabled = !result;
   drawNavigationButtons();
 }
 
-static void ScreenPointsGates::drawNavigationButtons(){
+static void ScreenTimeGates::drawNavigationButtons(){
   uint16_t color = TFT_YELLOW;
   void* onClick = nullptr;
 
   if (nextEnabled) {
     if (nextEv == nullptr) {
       onClick = []{
-        ScreenPointsGates::drawResult(false,true);
-        ScreenPointsGates::incPhase();
-        ScreenPointsGates::drawNextPhase();
+        ScreenTimeGates::drawResult(false,true);
+        ScreenTimeGates::incPhase();
+        ScreenTimeGates::drawNextPhase();
       };
     } 
   } else {
@@ -526,7 +547,7 @@ static void ScreenPointsGates::drawNavigationButtons(){
   }
 }
 
-static void ScreenPointsGates::draw(TextInfo pTitleInfo, char* params[]) {
+static void ScreenTimeGates::draw(TextInfo pTitleInfo, char* params[]) {
   freeMemory();
   titleInfo = pTitleInfo;
   if (params != nullptr && params[0] != nullptr) {
@@ -547,16 +568,30 @@ static void ScreenPointsGates::draw(TextInfo pTitleInfo, char* params[]) {
   TSCtrl::tft.setTextColor(TFT_DARKGREY);
   TSCtrl::tft.print("Fase");
 
-  TSCtrl::tft.setCursor(TSCtrl::tft.width() - DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN - 78, titleInfo.y + titleInfo.h + 5);
+  TSCtrl::tft.setCursor(TSCtrl::tft.width() - DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN - 71, titleInfo.y + titleInfo.h + 5);
   TSCtrl::tft.setTextColor(TFT_CYAN);
-  TSCtrl::tft.print("Pontos");
+  TSCtrl::tft.print("Tempo");
 
-  drawCurrentPontuation();
+  //drawCurrentPontuation();
+
+  auto f = [](){      
+    ScreenTimeGates::drawTime();
+  };
+  if (EvtCtrl::onTime != nullptr) {
+    delete EvtCtrl::onTime;
+  }
+  EvtCtrl::onTime = new LambdaCallback<decltype(f)>(f);
+  initialTime = currentTime;
+  previousMillis = millis();  
 
   drawNextPhase(false);
 }
 
-static void ScreenPointsGates::drawEndGame() {
+static void ScreenTimeGates::drawEndGame() {
+  if (EvtCtrl::onTime != nullptr) {
+    delete EvtCtrl::onTime;
+    EvtCtrl::onTime = nullptr;
+  }
   TSCtrl::tft.fillRect(
     TSCtrl::tft.width()-DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN-121,
     0,
@@ -574,16 +609,24 @@ static void ScreenPointsGates::drawEndGame() {
     DEFAULT_BACKGROUND_COLOR
   );
 
-  DrawCtrl::drawCenteredText("Sua pontuacao final foi",DEFAULT_WINDOW_CONTAINER_Y+35);
+  DrawCtrl::drawCenteredText("Seu tempo foi",DEFAULT_WINDOW_CONTAINER_Y+35);
 
   TSCtrl::tft.fillCircle(TSCtrl::tft.width() / 2, TSCtrl::tft.height() / 2 + 20, TSCtrl::tft.height() * 0.2, TFT_RED);
   TSCtrl::tft.drawCircle(TSCtrl::tft.width() / 2, TSCtrl::tft.height() / 2 + 20, TSCtrl::tft.height() * 0.25, TFT_RED);
-  TSCtrl::tft.setCursor(TSCtrl::tft.width() / 2-(currentPontuation>9?20:10), TSCtrl::tft.height() / 2 + 2);
+  TSCtrl::tft.setCursor(TSCtrl::tft.width() / 2-58, TSCtrl::tft.height() / 2 + 2);
   TSCtrl::tft.setTextSize(4);
+
+  currentTime = initialTime - currentTime;
+
+  uint8_t minutes = (currentTime / 1000) / 60;
+  uint8_t seconds = (currentTime / 1000) % 60; 
+
+  char timeString[5];
+    
+  sprintf(timeString, "%02d:%02d", minutes, seconds);
+
   TSCtrl::tft.setTextColor(DEFAULT_TEXT_COLOR);
-  Serial.println("current Pontuation: "+String(currentPontuation));
-  TSCtrl::tft.print(currentPontuation);
-
-
-
+  Serial.println("current Pontuation: "+String(timeString));
+  TSCtrl::tft.print(timeString);
+  
 }

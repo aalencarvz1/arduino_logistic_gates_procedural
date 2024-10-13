@@ -107,3 +107,10 @@ bool getBit(uint16_t byte, int position) {
     return (byte >> position) & 1;
 }
 
+uint8_t getRandomic(uint8_t min, uint8_t max, uint8_t invalid) {
+  uint8_t result = invalid;  
+  while(result == invalid) {
+    result = random(min,max);
+  }
+  return result;
+}

@@ -1,4 +1,5 @@
 #include "ScreensCtrl.h"
+#include <MemoryUsage.h>
 #include "TSCtrl.h"
 #include "EvtCtrl.h"
 #include "Colors.h"
@@ -7,6 +8,10 @@
 #include "ScreenTutorialGates.h"
 #include "ScreenPointsGates.h"
 #include "ScreenPoints.h"
+#include "ScreenTimeGates.h"
+#include "ScreenTime.h"
+#include "ScreenMake.h"
+
 
 //STATIC INITIALIZATIONS
 StackArray <uint8_t> ScreensCtrl::stack;
@@ -113,51 +118,16 @@ static void ScreensCtrl::drawTutorialScreenOptions(TextInfo titleInfo) {
   drawGateButton(pX,pY,pR,col+3,lin,hSpace,TFT_PURPLE,GATES_NAMES[6]);
 }
 
-static void ScreensCtrl::drawPoitnsScreenOptions(TextInfo titleInfo) {
-  /*double pX = TSCtrl::tft.width() / 2;
-  pX = pX /2;
-  double pY = TSCtrl::tft.height() / 2 - 10;
-  double pR = pY;
-  if (pY > pX) {
-    pR = pX;
-  }
-  pR = pR * 0.4;
-
-  DrawCtrl::drawOption(
-    pX,
-    pY,
-    pR,
-    Colors::BLUE,
-    true,
-    "Jogar",
-    []{
-      ScreensCtrl::goTo(30);
-    }
-  );*/
-
-  ScreenPoints::draw(titleInfo);
-}
-
 static void ScreensCtrl::goTo(uint8_t screenId, char* params[], bool popCurrent) {
-  Serial.println(F("INIT ScreensCtrl::goTo"));
+  //Serial.println(F("INIT ScreensCtrl::goTo"));
 
   if (!stack.isEmpty()) {
-    switch(stack.peek()) {
-      case 20:
-        ScreenTutorialGates::freeMemory();
-        break;
-      case 3:
-        ScreenPoints::freeMemory();
-      case 30:
-        ScreenPointsGates::freeMemory();
-        break;
-    };
-
+    destroy(stack.peek());
   } 
 
 
 
-  Serial.println("screenId "+String(screenId));
+  //Serial.println("screenId "+String(screenId));
   EvtCtrl::clearAllEvents();
   TSCtrl::tft.fillScreen(DEFAULT_BACKGROUND_COLOR);
   char* title = nullptr;
@@ -173,11 +143,20 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[], bool popCurrent)
     case 20: //tutorial gates
       title = "MODO TUTORIAL-PORTAS";
       break;
-    case 3: //tutorial gates
+    case 3: //poins gates
       title = "MODO PONTUACAO";
       break;
-    case 30: //tutorial gates
+    case 30: //poins gates
       title = "MODO PONTUACAO";
+      break;
+    case 4: //time gates
+      title = "MODO TEMPO";
+      break;
+    case 40: //time gates
+      title = "MODO TEMPO";
+      break;
+    case 5: //time gates
+      title = "MODO CONSTRUCAO";
       break;
     default: 
       title = "NAO ENCONTRADO";      
@@ -232,10 +211,19 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[], bool popCurrent)
       ScreenTutorialGates::draw(titleInfo, params);
       break;
     case 3: //points
-      drawPoitnsScreenOptions(titleInfo);      
+      ScreenPoints::draw(titleInfo);
+      break;
+    case 4: //time
+      ScreenTime::draw(titleInfo);
       break;
     case 30: //points
       ScreenPointsGates::draw(titleInfo, params);
+      break;
+    case 40: //time
+      ScreenTimeGates::draw(titleInfo, params);
+      break;
+    case 5: //time
+      ScreenMake::draw(titleInfo, params);
       break;
     default: 
       DrawCtrl::drawCenteredText("Nada aqui",TSCtrl::tft.height()/2);      
@@ -252,11 +240,31 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[], bool popCurrent)
   } else {
     stack.push(screenId);
   }
-  Serial.println(F("END ScreensCtrl::goTo"));
+  FREERAM_PRINT;
+  //Serial.println(F("END ScreensCtrl::goTo"));
+}
+
+static void ScreensCtrl::destroy(uint8_t screenId) {
+   switch(screenId) {
+    case 20:
+      ScreenTutorialGates::freeMemory();
+      break;
+    case 3:
+      ScreenPoints::freeMemory();
+    case 30:
+      ScreenPointsGates::freeMemory();
+    case 4:
+      ScreenTime::freeMemory();
+    case 40:
+      ScreenTimeGates::freeMemory();
+    case 5:
+      ScreenMake::freeMemory();
+      break;    
+  };
 }
 
 //navigate to previous screen on stack
 static void ScreensCtrl::goBack() { 
-  stack.pop();
+  destroy(stack.pop());
   ScreensCtrl::goTo(stack.peek());
 }
