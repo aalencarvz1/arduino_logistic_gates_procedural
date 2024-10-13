@@ -14,6 +14,7 @@ static bool ScreenTutorialGates::nextEnabled = false;
 static TextInfo ScreenTutorialGates::titleInfo;
 
 static void ScreenTutorialGates::freeMemory() {
+  //Serial.println(F("INIT ScreenTutorialGates::freeMemory"));
   currentGateName = GATES_NAMES[0];
   if (currentGate != nullptr) {
     delete currentGate;
@@ -28,12 +29,10 @@ static void ScreenTutorialGates::freeMemory() {
 }
 
 static void ScreenTutorialGates::drawNavigationButtons(){
-  Serial.println(currentGateName);
   bool previousPrevEnabled = prevEnabled;
   bool previousNextEnabled = nextEnabled;
   prevEnabled = strcmp(currentGateName,GATES_NAMES[0]) != 0;
   nextEnabled = strcmp(currentGateName,GATES_NAMES[GATES_NAMES_COUNT-1]) != 0;  
-  Serial.println(boolToString(prevEnabled)+","+boolToString(nextEnabled));
   uint16_t color = TFT_YELLOW;
   void* onClick = nullptr;
   
@@ -47,7 +46,6 @@ static void ScreenTutorialGates::drawNavigationButtons(){
     color = DEFAULT_BACKGROUND_COLOR;
   };
   if (prevEnabled && onClick != nullptr) {
-    Serial.println("creating prev event");
     prevEv = DrawCtrl::drawClickable(
       onClick,
       nullptr,
@@ -64,7 +62,6 @@ static void ScreenTutorialGates::drawNavigationButtons(){
   }; 
 
   if (!(prevEnabled && onClick != nullptr) && prevEnabled != previousPrevEnabled) {
-    Serial.println("drawing prev button");
     double x2=0;
     double y2=0;
     double r1=0;
@@ -96,7 +93,6 @@ static void ScreenTutorialGates::drawNavigationButtons(){
     color = DEFAULT_BACKGROUND_COLOR;
   };
   if (nextEnabled && onClick != nullptr) {
-    Serial.println("creating next event");
     nextEv = DrawCtrl::drawClickable(
       onClick,
       nullptr,
@@ -113,7 +109,6 @@ static void ScreenTutorialGates::drawNavigationButtons(){
   }; 
 
   if (!(nextEnabled && onClick != nullptr) && nextEnabled != previousNextEnabled) {
-    Serial.println("drawing prev button");
     double x2=0;
     double y2=0;
     double r1=0;
@@ -169,14 +164,12 @@ static void ScreenTutorialGates::drawGate(const char* gateName){
 }
 
 static void ScreenTutorialGates::drawPrevGate(){
-  Serial.println("going back gate");
   currentGateName = getPrevGateName(currentGateName);
   drawNavigationButtons();
   drawGate(currentGateName);
 }
 
 static void ScreenTutorialGates::drawNextGate(){
-  Serial.println("going next gate");
   currentGateName = getNextGateName(currentGateName);
   drawNavigationButtons();
   drawGate(currentGateName);

@@ -11,7 +11,7 @@
 void setup() {
   Serial.begin(9600);
   TSCtrl::init(); 
-  randomSeed(micros());
+  randomSeed(analogRead(A0) + micros());
   ScreensCtrl::goTo(1);
   
   /*
@@ -40,6 +40,10 @@ void loop() {
   //clicked
   if (p.z > 0 && !EvtCtrl::inClick) {
     EvtCtrl::checkClickedEvents(p);
+  }
+
+  if (EvtCtrl::onTime != nullptr) {
+    EvtCtrl::onTime->call();
   }
 
   delay(100);

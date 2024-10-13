@@ -11,6 +11,7 @@ struct EvtCtrl {
   static uint8_t transitoryClickEventsCount;
   static ClickEvent** screenClickEvents;
   static ClickEvent** transitoryClickEvents;
+  static ICallback* onTime;
 
   static void addEvent(ClickEvent* pEvent,ClickEvent** pList);
   static void addScreenEvent(ClickEvent* pEvent);

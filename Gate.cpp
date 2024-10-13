@@ -1,6 +1,8 @@
 #include "Gate.h"
 #include "Utils.h"
 
+static uint16_t Gate::currentId = 0;
+
 Gate::Gate(
   uint8_t pType,
   uint16_t pX,
@@ -9,6 +11,7 @@ Gate::Gate(
   uint16_t pW,
   uint8_t pInputCount
 ) :
+  id(currentId),
   type(pType),
   x(pX),
   y(pY),
@@ -16,6 +19,8 @@ Gate::Gate(
   w(pW),
   inputCount(pInputCount)
 {
+  Serial.println("created gate id "+String(id));
+  currentId++;
   if (w == 0) {
     w = h; 
   }
@@ -32,9 +37,21 @@ Gate::Gate(
 
 Gate::~Gate() {
   if (connectedGates != nullptr) {
+    for(int i = 0; i < connectedGatesQty; i++) {
+      connectedGates[i] = nullptr;
+    }
     delete[] connectedGates; //not delete elements, only array of pointers
+    //delete connectedGates;
+    connectedGates = nullptr;
   }
   if (connectedInputs != nullptr) {
+    for(int i = 0; i < connectedGatesQty; i++) {
+      connectedInputs[i] = 0;
+    }
     delete[] connectedInputs; //not delete elements, only array of pointers
+    //delete connectedInputs;
+    connectedInputs = nullptr;
   }
+  connectedGatesQty = 0;
+  Serial.println("destroyed gate id "+String(id));
 }

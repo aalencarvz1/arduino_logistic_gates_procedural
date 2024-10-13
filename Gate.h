@@ -24,6 +24,8 @@
 
 
 struct Gate {
+  static uint16_t currentId;
+  uint16_t id = 0;
 	uint8_t type = 0;
   uint16_t x = 0;
   uint16_t y = 0;

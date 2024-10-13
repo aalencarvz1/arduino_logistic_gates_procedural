@@ -221,6 +221,6 @@ void addConnectedGate(Gate*& originOutput,Gate*& destinyGate,uint8_t destinyInpu
 
   //originOutput->connectedGatesQty++;
 
-  FREERAM_PRINT;
+  //FREERAM_PRINT;
 }
 

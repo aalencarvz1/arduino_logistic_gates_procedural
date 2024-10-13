@@ -1,14 +1,13 @@
 
-#ifndef SCREENPOINTSGATES_H
-#define SCREENPOINTSGATES_H
+#ifndef SCREENTIMEGATES_H
+#define SCREENTIMEGATES_H
 
 #include "ClickEvent.h"
 #include "DrawCtrl.h"
 #include "Circuit.h"
 
-#define DEFAULT_PHASE_TIME_INTERVAL 200
 
-struct ScreenPointsGates {
+struct ScreenTimeGates {
   static uint8_t levelCount;
   static bool nextEnabled;
   static ClickEvent* confirmEvent;
@@ -28,9 +27,13 @@ struct ScreenPointsGates {
   static Circuit* currentCircuit;
   static bool initialState;
   static bool updateInitialState;
+  static unsigned long previousMillis;
+  static unsigned long initialTime;
+  static unsigned long currentTime;
+  static unsigned long interval;
   static void freeMemory();
   static void drawConfirmButton();
-  static void drawCurrentPontuation();
+  static void drawTime();
   static void drawLevelAndPhase();
   static void clearGateSapce();
   static void clearAllSpaces();

@@ -598,3 +598,36 @@ static void DrawCtrl::drawGate(Gate* g) {
     }
   }
 }
+
+
+
+static void DrawCtrl::drawRadio(Radio* option) {
+  TSCtrl::tft.drawCircle(option->x-20,option->y+7, 7,DEFAULT_TEXT_COLOR);  
+  TSCtrl::tft.setCursor(option->x,option->y);
+  TSCtrl::tft.setTextColor(DEFAULT_TEXT_COLOR);
+  TSCtrl::tft.print(option->text);
+  if (option->selected) {
+    TSCtrl::tft.drawRoundRect(option->x-35,option->y-5, option->w,option->h,3,TFT_GREEN);
+    TSCtrl::tft.fillCircle(option->x-20,option->y+7, 5,TFT_GREEN);
+  } else {
+    TSCtrl::tft.drawRoundRect(option->x-35,option->y-5, option->w,option->h,3,TFT_DARKGREY);
+    TSCtrl::tft.fillCircle(option->x-20,option->y+7, 5,DEFAULT_BACKGROUND_COLOR);
+  }
+}
+
+static void DrawCtrl::selectRadio(uint8_t pSelectedIndex, Radio** options, uint8_t optionsCount) {  
+  int indexPreviousSelected = -1;
+  for(uint8_t i = 0; i < optionsCount; i++) {
+    if (options[i]->selected) {
+      indexPreviousSelected = i;
+    }
+    options[i]->selected = false;  
+  }
+  if (indexPreviousSelected > -1 && indexPreviousSelected != pSelectedIndex) {
+    DrawCtrl::drawRadio(options[indexPreviousSelected]);
+  }
+  options[pSelectedIndex]->selected = true;
+  if (indexPreviousSelected != pSelectedIndex) {  
+    DrawCtrl::drawRadio(options[pSelectedIndex]);
+  }
+} 
