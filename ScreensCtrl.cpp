@@ -8,6 +8,10 @@
 #include "ScreenTutorialGates.h"
 #include "ScreenPointsGates.h"
 #include "ScreenPoints.h"
+#include "ScreenTimeGates.h"
+#include "ScreenTime.h"
+#include "ScreenMake.h"
+
 
 //STATIC INITIALIZATIONS
 StackArray <uint8_t> ScreensCtrl::stack;
@@ -114,10 +118,6 @@ static void ScreensCtrl::drawTutorialScreenOptions(TextInfo titleInfo) {
   drawGateButton(pX,pY,pR,col+3,lin,hSpace,TFT_PURPLE,GATES_NAMES[6]);
 }
 
-static void ScreensCtrl::drawPoitnsScreenOptions(TextInfo titleInfo) {  
-  ScreenPoints::draw(titleInfo);
-}
-
 static void ScreensCtrl::goTo(uint8_t screenId, char* params[], bool popCurrent) {
   //Serial.println(F("INIT ScreensCtrl::goTo"));
 
@@ -143,11 +143,20 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[], bool popCurrent)
     case 20: //tutorial gates
       title = "MODO TUTORIAL-PORTAS";
       break;
-    case 3: //tutorial gates
+    case 3: //poins gates
       title = "MODO PONTUACAO";
       break;
-    case 30: //tutorial gates
+    case 30: //poins gates
       title = "MODO PONTUACAO";
+      break;
+    case 4: //time gates
+      title = "MODO TEMPO";
+      break;
+    case 40: //time gates
+      title = "MODO TEMPO";
+      break;
+    case 5: //time gates
+      title = "MODO CONSTRUCAO";
       break;
     default: 
       title = "NAO ENCONTRADO";      
@@ -202,10 +211,19 @@ static void ScreensCtrl::goTo(uint8_t screenId, char* params[], bool popCurrent)
       ScreenTutorialGates::draw(titleInfo, params);
       break;
     case 3: //points
-      drawPoitnsScreenOptions(titleInfo);      
+      ScreenPoints::draw(titleInfo);
+      break;
+    case 4: //time
+      ScreenTime::draw(titleInfo);
       break;
     case 30: //points
       ScreenPointsGates::draw(titleInfo, params);
+      break;
+    case 40: //time
+      ScreenTimeGates::draw(titleInfo, params);
+      break;
+    case 5: //time
+      ScreenMake::draw(titleInfo, params);
       break;
     default: 
       DrawCtrl::drawCenteredText("Nada aqui",TSCtrl::tft.height()/2);      
@@ -235,7 +253,13 @@ static void ScreensCtrl::destroy(uint8_t screenId) {
       ScreenPoints::freeMemory();
     case 30:
       ScreenPointsGates::freeMemory();
-      break;
+    case 4:
+      ScreenTime::freeMemory();
+    case 40:
+      ScreenTimeGates::freeMemory();
+    case 5:
+      ScreenMake::freeMemory();
+      break;    
   };
 }
 

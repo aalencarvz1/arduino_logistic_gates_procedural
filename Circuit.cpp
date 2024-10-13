@@ -102,6 +102,7 @@ Gate* Circuit::createGate(
       double x1 = pOutputGate->x + pOutputGate->w / 2 - levelGateWidth / 2;
       x1 = x1 + currentGateSapce / 2 - pWidth / 2;
       pX = x1 + pOutputInpuIndex * currentGateSapce;//(pWidth + gateSpacing); 
+      pX += 1;
     }
   }
 

@@ -42,5 +42,9 @@ void loop() {
     EvtCtrl::checkClickedEvents(p);
   }
 
+  if (EvtCtrl::onTime != nullptr) {
+    EvtCtrl::onTime->call();
+  }
+
   delay(100);
 }

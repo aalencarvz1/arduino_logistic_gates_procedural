@@ -6,6 +6,7 @@
 #include "TSCtrl.h"
 #include "ClickEvent.h"
 #include "Gate.h"
+#include "Radio.h"
 
 
 #define DEFAULT_BACKGROUND_COLOR TFT_BLACK
@@ -135,6 +136,8 @@ struct DrawCtrl{
   static void drawNot(Gate* g);  
   static void drawBypass(Gate* g); 
   static void drawGate(Gate* g);
+  static void drawRadio(Radio* option);
+  static void selectRadio(uint8_t pSelectedIndex, Radio** options, uint8_t optionsCount);
 };
 
 #endif // DRAWCTRL_H

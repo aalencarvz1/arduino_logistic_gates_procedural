@@ -8,6 +8,7 @@ uint8_t EvtCtrl::screenClickEventsCount = 0;
 uint8_t EvtCtrl::transitoryClickEventsCount = 0;
 ClickEvent** EvtCtrl::screenClickEvents = nullptr;
 ClickEvent** EvtCtrl::transitoryClickEvents = nullptr;
+ICallback* EvtCtrl::onTime = nullptr;
 
 static void EvtCtrl::addScreenEvent(ClickEvent* pEvent) {
   ClickEvent** newScreenClickEvents = new ClickEvent*[screenClickEventsCount + 1];    

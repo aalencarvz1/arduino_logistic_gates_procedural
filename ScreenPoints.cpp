@@ -22,54 +22,24 @@ static void ScreenPoints::freeMemory() {
   }
 }
 
-
-static void ScreenPoints::drawRadio(Radio* option) {
-  TSCtrl::tft.drawCircle(option->x-20,option->y+7, 7,DEFAULT_TEXT_COLOR);  
-  TSCtrl::tft.setCursor(option->x,option->y);
-  TSCtrl::tft.setTextColor(DEFAULT_TEXT_COLOR);
-  TSCtrl::tft.print(option->text);
-  if (option->selected) {
-    TSCtrl::tft.drawRoundRect(option->x-35,option->y-5, 300,25,3,TFT_GREEN);
-    TSCtrl::tft.fillCircle(option->x-20,option->y+7, 5,TFT_GREEN);
-  } else {
-    TSCtrl::tft.drawRoundRect(option->x-35,option->y-5, 300,25,3,TFT_DARKGREY);
-    TSCtrl::tft.fillCircle(option->x-20,option->y+7, 5,DEFAULT_BACKGROUND_COLOR);
-  }
-}
-
-static void ScreenPoints::selectOption(uint8_t optionIndex) {  
-  int indexPreviousSelected = -1;
-  for(uint8_t i = 0; i < optionsCount; i++) {
-    if (options[i]->selected) {
-      indexPreviousSelected = i;
-    }
-    options[i]->selected = false;  
-  }
-  if (indexPreviousSelected > -1 && indexPreviousSelected != optionIndex) {
-    drawRadio(options[indexPreviousSelected]);
-  }
-  options[optionIndex]->selected = true;
-  if (indexPreviousSelected != optionIndex) {  
-    drawRadio(options[optionIndex]);
-  }
-} 
-
 static void ScreenPoints::initRadios(TextInfo titleInfo) {
   freeMemory();
   options = new Radio*[optionsCount]{nullptr};
   for(int i = 0; i < optionsCount; i++) {
     options[i] = new Radio();
     options[i]->x = DEFAULT_WINDOW_CONTENT_CONTAINER_MARGIN + 45;
-    options[i]->y = titleInfo.y+titleInfo.h+45+i*30;
+    options[i]->y = titleInfo.y+titleInfo.h+40+i*30;
+    options[i]->w = 300;
+    options[i]->h = 25;
     options[i]->selected = currentSelectedIndex == i;
     options[i]->ev = new ClickEvent();
     options[i]->ev->type = 1; //rectangle
-    options[i]->ev->x = options[i]->x;
+    options[i]->ev->x = options[i]->x-35;
     options[i]->ev->y = options[i]->y;
-    options[i]->ev->m1 = 300;
-    options[i]->ev->m2 = 25;
-    auto f = [i](){      
-      ScreenPoints::selectOption(i);
+    options[i]->ev->m1 = options[i]->w;
+    options[i]->ev->m2 = options[i]->h;
+    auto f = [i,options,optionsCount](){      
+      DrawCtrl::selectRadio(i,options,optionsCount);
     };
     options[i]->ev->onClickCallback = new LambdaCallback<decltype(f)>(f);
     EvtCtrl::addScreenEvent(options[i]->ev);
@@ -99,7 +69,7 @@ static void ScreenPoints::draw(TextInfo titleInfo, char* params[]) {
   TSCtrl::tft.setTextColor(DEFAULT_TEXT_COLOR);
   TSCtrl::tft.print(F("Iniciar no nivel:"));
   for(uint8_t i = 0; i < optionsCount; i++) {   
-    drawRadio(options[i]);
+    DrawCtrl::drawRadio(options[i]);
   }
 
   EvtCtrl::addScreenEvent(DrawCtrl::drawClickable(
